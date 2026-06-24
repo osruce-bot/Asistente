@@ -57,12 +57,21 @@ export interface Cita {
   notas?: string;
 }
 
+export interface AccesoUsuario {
+  id: string;
+  nombre: string;
+  usuario: string; // username/identifier for login
+  rol: 'admin' | 'asistente';
+  clave: string;
+}
+
 export interface ConfigGeneral {
   rmvVigente: number; // Sueldo mínimo actual en Perú (S/ 1,130 por defecto)
   bonoVentaPredeterminado: number; // S/ 150 por defecto
   bonoAlquilerPredeterminado: number; // S/ 80 por defecto
   claveAdmin?: string; // Clave de acceso del Administrador (defecto: admin123)
   claveAsistente?: string; // Clave de acceso del Asistente (defecto: asistente123)
+  accesosPermitidos?: AccesoUsuario[]; // List of allowed user profiles
 }
 
 export interface LiquidacionMensual {

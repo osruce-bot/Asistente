@@ -20,7 +20,7 @@ import {
   Award,
   Lock
 } from 'lucide-react';
-import { Asistente, Cita, EstadoCita, EstadoCierre, TipoOperacionCita, ConfigGeneral, LiquidacionMensual, AuditLog } from './types';
+import { Asistente, Cita, EstadoCita, EstadoCierre, TipoOperacionCita, ConfigGeneral, LiquidacionMensual, AuditLog, AccesoUsuario } from './types';
 import Dashboard from './components/Dashboard';
 import AsistentesManager from './components/AsistentesManager';
 import CitasManager from './components/CitasManager';
@@ -40,7 +40,8 @@ import {
 import { 
   signInWithPopup, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  signInAnonymously
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { 
@@ -195,7 +196,23 @@ const DEFAULT_CONFIG: ConfigGeneral = {
   bonoVentaPredeterminado: 150,
   bonoAlquilerPredeterminado: 80,
   claveAdmin: 'admin123',
-  claveAsistente: 'asistente123'
+  claveAsistente: 'asistente123',
+  accesosPermitidos: [
+    {
+      id: 'acc-1',
+      nombre: 'Oscar Russo',
+      usuario: 'oscar',
+      rol: 'admin',
+      clave: 'admin123'
+    },
+    {
+      id: 'acc-2',
+      nombre: 'Asistente Principal',
+      usuario: 'asistente',
+      rol: 'asistente',
+      clave: 'asistente123'
+    }
+  ]
 };
 
 export default function App() {
@@ -214,6 +231,9 @@ export default function App() {
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState<boolean>(false);
+  const [unlockedProfileName, setUnlockedProfileName] = useState<string>(() => {
+    return sessionStorage.getItem('remax_profile_name') || '';
+  });
 
   // Clean up any potential leftover dark class
   useEffect(() => {
@@ -288,6 +308,17 @@ export default function App() {
   // 2. Auth State Changed and Firestore synchronization
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
+        setIsAuthLoading(true);
+        try {
+          await signInAnonymously(auth);
+        } catch (err) {
+          console.error('Error signing in anonymously:', err);
+          setIsAuthLoading(false);
+        }
+        return;
+      }
+
       setUser(currentUser);
       setIsAuthLoading(false);
       
@@ -486,18 +517,6 @@ export default function App() {
       } finally {
         setIsSyncing(false);
       }
-    }
-  };
-
-  // Google Sign In handler
-  const handleGoogleLogin = async () => {
-    try {
-      setIsSyncing(true);
-      await signInWithPopup(auth, getGoogleProvider());
-    } catch (err) {
-      console.error('Login failed:', err);
-    } finally {
-      setIsSyncing(false);
     }
   };
 
@@ -701,15 +720,18 @@ export default function App() {
     return (
       <LockScreen 
         config={config}
-        onUnlock={(role) => {
+        onUnlock={(role, profileName) => {
           setUserRole(role);
           sessionStorage.setItem('remax_user_role', role);
+          if (profileName) {
+            setUnlockedProfileName(profileName);
+            sessionStorage.setItem('remax_profile_name', profileName);
+          }
           if (role !== 'admin') {
             setActiveTab('dashboard');
           }
         }}
         user={user}
-        onGoogleLogin={handleGoogleLogin}
         isSyncing={isSyncing}
       />
     );
@@ -743,59 +765,41 @@ export default function App() {
             </div>
 
             {/* Sync Status / Authentication */}
+            {/* Header profile details */}
             <div className="flex items-center gap-3 text-xs text-slate-200">
               
               {/* Active Role status badge & Lock button */}
-              <div className="flex items-center gap-1.5 bg-slate-800/60 border border-slate-700/60 py-1 px-2.5 rounded-md shadow-sm">
-                <span className={`px-2 py-0.5 rounded font-mono text-[9px] uppercase tracking-wide font-bold ${
+              <div className="flex items-center gap-2 bg-slate-850/80 border border-slate-750 py-1.5 px-3 rounded-md shadow-sm">
+                <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold">
+                  {(unlockedProfileName || 'O')[0].toUpperCase()}
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="font-bold text-[10px] text-white leading-none truncate max-w-[120px]">
+                    {unlockedProfileName || (userRole === 'admin' ? "Oscar Russo" : "Asistente")}
+                  </span>
+                  <span className="text-[8px] font-mono text-blue-400 flex items-center gap-0.5 mt-0.5 font-bold uppercase tracking-wider">
+                    <Cloud className="w-2.5 h-2.5 text-emerald-400" />
+                    {isSyncing ? "Sincronizando..." : "Nube Activa"}
+                  </span>
+                </div>
+                
+                <span className={`ml-2 px-1.5 py-0.5 rounded font-mono text-[8px] uppercase tracking-wide font-bold ${
                   userRole === 'admin' 
                     ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
                     : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                 }`}>
-                  {userRole === 'admin' ? 'Administrador' : 'Asistente'}
+                  {userRole === 'admin' ? 'Admin' : 'Asistente'}
                 </span>
+
                 <button
-                  onClick={handleLockRole}
-                  title="Bloquear pantalla y salir del rol"
-                  className="p-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
+                  onClick={handleLogout}
+                  title="Cerrar sesión de perfil"
+                  className="ml-2 text-[9px] font-bold text-slate-300 hover:text-brand-red uppercase bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1"
                 >
-                  <Lock className="w-3.5 h-3.5" />
+                  <Lock className="w-3 h-3" />
+                  <span>Salir</span>
                 </button>
               </div>
-
-              {/* Sync status cloud icon */}
-              {isAuthLoading ? (
-                <div className="h-8 w-28 bg-slate-800 rounded animate-pulse" />
-              ) : user ? (
-                <div className="flex items-center gap-2 bg-slate-800/80 border border-slate-700 py-1 px-3 rounded-md shadow-sm">
-                  <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold">
-                    {user.displayName ? user.displayName[0].toUpperCase() : 'A'}
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="font-bold text-[10px] text-white leading-none truncate max-w-[100px]">
-                      {user.displayName || "Oscar Russo"}
-                    </span>
-                    <span className="text-[8px] font-mono text-blue-400 flex items-center gap-0.5 mt-0.5 font-bold uppercase tracking-wider">
-                      <Cloud className="w-2.5 h-2.5" />
-                      {isSyncing ? "Guardando..." : "Nube Activada"}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="ml-2 text-[9px] font-bold text-slate-300 hover:text-brand-red uppercase bg-slate-700 hover:bg-slate-600 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
-                  >
-                    Salir
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={handleGoogleLogin}
-                  className="flex items-center gap-1.5 bg-primary hover:bg-primary/95 text-white font-bold text-[10px] uppercase tracking-wider py-1.5 px-3 rounded shadow-sm transition-all cursor-pointer border border-primary/20"
-                >
-                  <Cloud className="w-3.5 h-3.5" />
-                  <span>Activar Backup Nube</span>
-                </button>
-              )}
             </div>
 
           </div>
@@ -995,16 +999,17 @@ export default function App() {
                 Cancelar
               </button>
               <button
-                onClick={async () => {
+                onClick={() => {
                   setLogoutModalOpen(false);
-                  try {
-                    setIsSyncing(true);
-                    await signOut(auth);
-                  } catch (err) {
-                    console.error('Logout error:', err);
-                  } finally {
+                  setIsSyncing(true);
+                  setTimeout(() => {
+                    setUserRole(null);
+                    setUnlockedProfileName('');
+                    sessionStorage.removeItem('remax_user_role');
+                    sessionStorage.removeItem('remax_profile_name');
+                    setActiveTab('dashboard');
                     setIsSyncing(false);
-                  }
+                  }, 300);
                 }}
                 className="px-3.5 py-1.5 text-xs font-bold uppercase text-white bg-primary hover:bg-primary/95 rounded cursor-pointer"
               >

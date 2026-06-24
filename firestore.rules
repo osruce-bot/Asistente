@@ -83,7 +83,7 @@ service cloud.firestore {
         data.keys().hasAll([
           'rmvVigente', 'bonoVentaPredeterminado', 'bonoAlquilerPredeterminado', 'ownerId'
         ]) &&
-        data.keys().size() >= 4 && data.keys().size() <= 8 &&
+        data.keys().size() >= 4 && data.keys().size() <= 12 &&
         data.rmvVigente is number && data.rmvVigente >= 0 &&
         data.bonoVentaPredeterminado is number && data.bonoVentaPredeterminado >= 0 &&
         data.bonoAlquilerPredeterminado is number && data.bonoAlquilerPredeterminado >= 0 &&
