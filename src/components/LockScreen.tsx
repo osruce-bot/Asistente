@@ -22,6 +22,7 @@ interface LockScreenProps {
   onUnlock: (role: 'admin' | 'asistente', profileName?: string) => void;
   user: any; // User | null
   isSyncing: boolean;
+  cloudSyncError?: string | null;
   onGoogleLogin: () => void;
   onGoogleLogout: () => void;
 }
@@ -31,6 +32,7 @@ export default function LockScreen({
   onUnlock,
   user,
   isSyncing,
+  cloudSyncError,
   onGoogleLogin,
   onGoogleLogout
 }: LockScreenProps) {
@@ -93,15 +95,27 @@ export default function LockScreen({
         </div>
 
         {/* Sync Status Banner */}
-        <div className="bg-slate-50 px-5 py-2.5 border-b border-slate-200 flex items-center justify-between text-xs text-slate-500">
-          <div className="flex items-center gap-1.5 text-[10px]">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="font-semibold text-slate-600">Base de datos en la nube activa (Firestore)</span>
+        {cloudSyncError ? (
+          <div className="bg-amber-50 px-5 py-3 border-b border-amber-200 flex flex-col gap-1 text-[10px] text-amber-800 animate-fade-in">
+            <div className="flex items-center gap-1.5 font-bold uppercase">
+              <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse shrink-0" />
+              <span>Sincronización Limitada (Local)</span>
+            </div>
+            <p className="text-slate-600 leading-normal font-medium">
+              {cloudSyncError}
+            </p>
           </div>
-          {isSyncing && (
-            <span className="text-[9px] font-bold text-primary animate-pulse uppercase">Sincronizando...</span>
-          )}
-        </div>
+        ) : (
+          <div className="bg-slate-50 px-5 py-2.5 border-b border-slate-200 flex items-center justify-between text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 text-[10px]">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="font-semibold text-slate-600">Base de datos en la nube activa (Firestore)</span>
+            </div>
+            {isSyncing && (
+              <span className="text-[9px] font-bold text-primary animate-pulse uppercase">Sincronizando...</span>
+            )}
+          </div>
+        )}
 
         <div className="p-6 space-y-6">
           

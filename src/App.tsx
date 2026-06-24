@@ -234,6 +234,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [logoutModalOpen, setLogoutModalOpen] = useState<boolean>(false);
   const [unlockedProfileName, setUnlockedProfileName] = useState<string>(() => {
     return sessionStorage.getItem('remax_profile_name') || '';
@@ -316,9 +317,11 @@ export default function App() {
         setIsAuthLoading(true);
         try {
           await signInAnonymously(auth);
-        } catch (err) {
+          setSyncError(null);
+        } catch (err: any) {
           console.error('Error signing in anonymously:', err);
           setIsAuthLoading(false);
+          setSyncError('No se pudo iniciar la sesión de base de datos de forma anónima. Asegúrese de activar el proveedor "Anónimo" en la consola de Firebase Authentication.');
         }
         return;
       }
@@ -329,6 +332,8 @@ export default function App() {
       if (currentUser) {
         try {
           setIsSyncing(true);
+          // Only clear syncError if we successfully logged in and will now try syncing
+          setSyncError(null);
 
           // Sync Global Config
           try {
@@ -337,17 +342,33 @@ export default function App() {
             if (configSnap.exists()) {
               const cloudConfig = configSnap.data() as ConfigGeneral;
               setConfig(cloudConfig);
-              localStorage.setItem('remax_hr_config', JSON.stringify(cloudConfig));
+              try {
+                localStorage.setItem('remax_hr_config', JSON.stringify(cloudConfig));
+              } catch (e) {
+                console.warn('LocalStorage is blocked or full:', e);
+              }
             } else {
               // Upload local config
-              const localConfigStr = localStorage.getItem('remax_hr_config');
-              const localConf = localConfigStr ? JSON.parse(localConfigStr) : DEFAULT_CONFIG;
+              let localConf = DEFAULT_CONFIG;
+              try {
+                const localConfigStr = localStorage.getItem('remax_hr_config');
+                if (localConfigStr) localConf = JSON.parse(localConfigStr);
+              } catch (e) {
+                console.warn('LocalStorage error:', e);
+              }
               await setDoc(configDocRef, { ...localConf, ownerId: WORKSPACE_ID });
             }
-          } catch (err) {
+          } catch (err: any) {
             console.error('Error syncing config_general, using fallback:', err);
-            const localConfig = localStorage.getItem('remax_hr_config');
-            setConfig(localConfig ? JSON.parse(localConfig) : DEFAULT_CONFIG);
+            let localConf = DEFAULT_CONFIG;
+            try {
+              const localConfig = localStorage.getItem('remax_hr_config');
+              if (localConfig) localConf = JSON.parse(localConfig);
+            } catch (e) {
+              console.warn('LocalStorage error:', e);
+            }
+            setConfig(localConf);
+            setSyncError(`Error al sincronizar configuración con Firestore: ${err.message || err}. Usando copia local.`);
           }
 
           // Sync Assistants
@@ -361,11 +382,20 @@ export default function App() {
 
             if (cloudAsList.length > 0) {
               setAsistentes(cloudAsList);
-              localStorage.setItem('remax_hr_asistentes', JSON.stringify(cloudAsList));
+              try {
+                localStorage.setItem('remax_hr_asistentes', JSON.stringify(cloudAsList));
+              } catch (e) {
+                console.warn('LocalStorage error:', e);
+              }
             } else {
               // Seed cloud database
-              const localAsStr = localStorage.getItem('remax_hr_asistentes');
-              const localAsList = localAsStr ? JSON.parse(localAsStr) : PRESET_ASISTENTES;
+              let localAsList = PRESET_ASISTENTES;
+              try {
+                const localAsStr = localStorage.getItem('remax_hr_asistentes');
+                if (localAsStr) localAsList = JSON.parse(localAsStr);
+              } catch (e) {
+                console.warn('LocalStorage error:', e);
+              }
               const batch = writeBatch(db);
               localAsList.forEach((as: Asistente) => {
                 const docRef = doc(db, 'asistentes', as.id);
@@ -375,8 +405,14 @@ export default function App() {
             }
           } catch (err) {
             console.error('Error syncing asistentes, using fallback:', err);
-            const localAs = localStorage.getItem('remax_hr_asistentes');
-            setAsistentes(localAs ? JSON.parse(localAs) : PRESET_ASISTENTES);
+            let localAs = PRESET_ASISTENTES;
+            try {
+              const localAsStr = localStorage.getItem('remax_hr_asistentes');
+              if (localAsStr) localAs = JSON.parse(localAsStr);
+            } catch (e) {
+              console.warn('LocalStorage error:', e);
+            }
+            setAsistentes(localAs);
           }
 
           // Sync Appointments (Citas)
@@ -390,11 +426,20 @@ export default function App() {
 
             if (cloudCitasList.length > 0) {
               setCitas(cloudCitasList);
-              localStorage.setItem('remax_hr_citas', JSON.stringify(cloudCitasList));
+              try {
+                localStorage.setItem('remax_hr_citas', JSON.stringify(cloudCitasList));
+              } catch (e) {
+                console.warn('LocalStorage error:', e);
+              }
             } else {
               // Seed cloud database
-              const localCitasStr = localStorage.getItem('remax_hr_citas');
-              const localCitasList = localCitasStr ? JSON.parse(localCitasStr) : getPresetCitas();
+              let localCitasList = getPresetCitas();
+              try {
+                const localCitasStr = localStorage.getItem('remax_hr_citas');
+                if (localCitasStr) localCitasList = JSON.parse(localCitasStr);
+              } catch (e) {
+                console.warn('LocalStorage error:', e);
+              }
               const batch = writeBatch(db);
               localCitasList.forEach((c: Cita) => {
                 const docRef = doc(db, 'citas', c.id);
@@ -404,8 +449,14 @@ export default function App() {
             }
           } catch (err) {
             console.error('Error syncing citas, using fallback:', err);
-            const localCitas = localStorage.getItem('remax_hr_citas');
-            setCitas(localCitas ? JSON.parse(localCitas) : getPresetCitas());
+            let localCitas = getPresetCitas();
+            try {
+              const localCitasStr = localStorage.getItem('remax_hr_citas');
+              if (localCitasStr) localCitas = JSON.parse(localCitasStr);
+            } catch (e) {
+              console.warn('LocalStorage error:', e);
+            }
+            setCitas(localCitas);
           }
 
           // Sync Liquidaciones
@@ -417,11 +468,21 @@ export default function App() {
               cloudLiqList.push(docSnap.data() as LiquidacionMensual);
             });
             setLiquidaciones(cloudLiqList);
-            localStorage.setItem('remax_hr_liquidaciones', JSON.stringify(cloudLiqList));
+            try {
+              localStorage.setItem('remax_hr_liquidaciones', JSON.stringify(cloudLiqList));
+            } catch (e) {
+              console.warn('LocalStorage error:', e);
+            }
           } catch (err) {
             console.error('Error syncing liquidaciones, using fallback:', err);
-            const localLiq = localStorage.getItem('remax_hr_liquidaciones');
-            setLiquidaciones(localLiq ? JSON.parse(localLiq) : []);
+            let localLiq: LiquidacionMensual[] = [];
+            try {
+              const localLiqStr = localStorage.getItem('remax_hr_liquidaciones');
+              if (localLiqStr) localLiq = JSON.parse(localLiqStr);
+            } catch (e) {
+              console.warn('LocalStorage error:', e);
+            }
+            setLiquidaciones(localLiq);
           }
 
           // Sync Audit Logs
@@ -434,27 +495,41 @@ export default function App() {
             });
             cloudAuditList.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
             setAuditLogs(cloudAuditList);
-            localStorage.setItem('remax_hr_audit_logs', JSON.stringify(cloudAuditList));
+            try {
+              localStorage.setItem('remax_hr_audit_logs', JSON.stringify(cloudAuditList));
+            } catch (e) {
+              console.warn('LocalStorage error:', e);
+            }
           } catch (err) {
             console.error('Error syncing audit_logs, using fallback:', err);
-            const localAudit = localStorage.getItem('remax_hr_audit_logs');
-            setAuditLogs(localAudit ? JSON.parse(localAudit) : []);
+            let localAudit: AuditLog[] = [];
+            try {
+              const localAuditStr = localStorage.getItem('remax_hr_audit_logs');
+              if (localAuditStr) localAudit = JSON.parse(localAuditStr);
+            } catch (e) {
+              console.warn('LocalStorage error:', e);
+            }
+            setAuditLogs(localAudit);
           }
         } finally {
           setIsSyncing(false);
         }
       } else {
         // Fallback local storage
-        const localAs = localStorage.getItem('remax_hr_asistentes');
-        if (localAs) setAsistentes(JSON.parse(localAs));
-        const localCitas = localStorage.getItem('remax_hr_citas');
-        if (localCitas) setCitas(JSON.parse(localCitas));
-        const localConfig = localStorage.getItem('remax_hr_config');
-        if (localConfig) setConfig(JSON.parse(localConfig));
-        const localLiq = localStorage.getItem('remax_hr_liquidaciones');
-        if (localLiq) setLiquidaciones(JSON.parse(localLiq));
-        const localAudit = localStorage.getItem('remax_hr_audit_logs');
-        if (localAudit) setAuditLogs(JSON.parse(localAudit));
+        try {
+          const localAs = localStorage.getItem('remax_hr_asistentes');
+          if (localAs) setAsistentes(JSON.parse(localAs));
+          const localCitas = localStorage.getItem('remax_hr_citas');
+          if (localCitas) setCitas(JSON.parse(localCitas));
+          const localConfig = localStorage.getItem('remax_hr_config');
+          if (localConfig) setConfig(JSON.parse(localConfig));
+          const localLiq = localStorage.getItem('remax_hr_liquidaciones');
+          if (localLiq) setLiquidaciones(JSON.parse(localLiq));
+          const localAudit = localStorage.getItem('remax_hr_audit_logs');
+          if (localAudit) setAuditLogs(JSON.parse(localAudit));
+        } catch (e) {
+          console.warn('LocalStorage fallback error:', e);
+        }
       }
     });
 
@@ -766,6 +841,7 @@ export default function App() {
         }}
         user={user}
         isSyncing={isSyncing}
+        cloudSyncError={syncError}
         onGoogleLogin={handleGoogleLogin}
         onGoogleLogout={handleGoogleLogout}
       />
