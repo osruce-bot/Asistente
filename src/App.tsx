@@ -345,8 +345,9 @@ export default function App() {
               await setDoc(configDocRef, { ...localConf, ownerId: WORKSPACE_ID });
             }
           } catch (err) {
-            console.error('Error syncing config_general:', err);
-            handleFirestoreError(err, OperationType.GET, 'config_general');
+            console.error('Error syncing config_general, using fallback:', err);
+            const localConfig = localStorage.getItem('remax_hr_config');
+            setConfig(localConfig ? JSON.parse(localConfig) : DEFAULT_CONFIG);
           }
 
           // Sync Assistants
@@ -373,8 +374,9 @@ export default function App() {
               await batch.commit();
             }
           } catch (err) {
-            console.error('Error syncing asistentes:', err);
-            handleFirestoreError(err, OperationType.LIST, 'asistentes');
+            console.error('Error syncing asistentes, using fallback:', err);
+            const localAs = localStorage.getItem('remax_hr_asistentes');
+            setAsistentes(localAs ? JSON.parse(localAs) : PRESET_ASISTENTES);
           }
 
           // Sync Appointments (Citas)
@@ -401,8 +403,9 @@ export default function App() {
               await batch.commit();
             }
           } catch (err) {
-            console.error('Error syncing citas:', err);
-            handleFirestoreError(err, OperationType.LIST, 'citas');
+            console.error('Error syncing citas, using fallback:', err);
+            const localCitas = localStorage.getItem('remax_hr_citas');
+            setCitas(localCitas ? JSON.parse(localCitas) : getPresetCitas());
           }
 
           // Sync Liquidaciones
@@ -416,8 +419,9 @@ export default function App() {
             setLiquidaciones(cloudLiqList);
             localStorage.setItem('remax_hr_liquidaciones', JSON.stringify(cloudLiqList));
           } catch (err) {
-            console.error('Error syncing liquidaciones:', err);
-            handleFirestoreError(err, OperationType.LIST, 'liquidaciones');
+            console.error('Error syncing liquidaciones, using fallback:', err);
+            const localLiq = localStorage.getItem('remax_hr_liquidaciones');
+            setLiquidaciones(localLiq ? JSON.parse(localLiq) : []);
           }
 
           // Sync Audit Logs
@@ -432,8 +436,9 @@ export default function App() {
             setAuditLogs(cloudAuditList);
             localStorage.setItem('remax_hr_audit_logs', JSON.stringify(cloudAuditList));
           } catch (err) {
-            console.error('Error syncing audit_logs:', err);
-            handleFirestoreError(err, OperationType.LIST, 'audit_logs');
+            console.error('Error syncing audit_logs, using fallback:', err);
+            const localAudit = localStorage.getItem('remax_hr_audit_logs');
+            setAuditLogs(localAudit ? JSON.parse(localAudit) : []);
           }
         } finally {
           setIsSyncing(false);
