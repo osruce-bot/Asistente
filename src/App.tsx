@@ -56,6 +56,10 @@ import {
   getDoc
 } from 'firebase/firestore';
 
+// Shared workspace identifier for RE/MAX Power Expo team synchronization
+export const WORKSPACE_ID = 'remax_expo';
+
+
 // Standard Premium Preset Data for seed
 const PRESET_ASISTENTES: Asistente[] = [
   {
@@ -328,7 +332,7 @@ export default function App() {
 
           // Sync Global Config
           try {
-            const configDocRef = doc(db, 'config_general', currentUser.uid);
+            const configDocRef = doc(db, 'config_general', WORKSPACE_ID);
             const configSnap = await getDoc(configDocRef);
             if (configSnap.exists()) {
               const cloudConfig = configSnap.data() as ConfigGeneral;
@@ -338,7 +342,7 @@ export default function App() {
               // Upload local config
               const localConfigStr = localStorage.getItem('remax_hr_config');
               const localConf = localConfigStr ? JSON.parse(localConfigStr) : DEFAULT_CONFIG;
-              await setDoc(configDocRef, { ...localConf, ownerId: currentUser.uid });
+              await setDoc(configDocRef, { ...localConf, ownerId: WORKSPACE_ID });
             }
           } catch (err) {
             console.error('Error syncing config_general:', err);
@@ -347,7 +351,7 @@ export default function App() {
 
           // Sync Assistants
           try {
-            const qAs = query(collection(db, 'asistentes'), where('ownerId', '==', currentUser.uid));
+            const qAs = query(collection(db, 'asistentes'), where('ownerId', '==', WORKSPACE_ID));
             const asSnap = await getDocs(qAs);
             const cloudAsList: Asistente[] = [];
             asSnap.forEach((docSnap) => {
@@ -364,7 +368,7 @@ export default function App() {
               const batch = writeBatch(db);
               localAsList.forEach((as: Asistente) => {
                 const docRef = doc(db, 'asistentes', as.id);
-                batch.set(docRef, { ...as, ownerId: currentUser.uid });
+                batch.set(docRef, { ...as, ownerId: WORKSPACE_ID });
               });
               await batch.commit();
             }
@@ -375,7 +379,7 @@ export default function App() {
 
           // Sync Appointments (Citas)
           try {
-            const qCitas = query(collection(db, 'citas'), where('ownerId', '==', currentUser.uid));
+            const qCitas = query(collection(db, 'citas'), where('ownerId', '==', WORKSPACE_ID));
             const citasSnap = await getDocs(qCitas);
             const cloudCitasList: Cita[] = [];
             citasSnap.forEach((docSnap) => {
@@ -392,7 +396,7 @@ export default function App() {
               const batch = writeBatch(db);
               localCitasList.forEach((c: Cita) => {
                 const docRef = doc(db, 'citas', c.id);
-                batch.set(docRef, { ...c, ownerId: currentUser.uid });
+                batch.set(docRef, { ...c, ownerId: WORKSPACE_ID });
               });
               await batch.commit();
             }
@@ -403,7 +407,7 @@ export default function App() {
 
           // Sync Liquidaciones
           try {
-            const qLiq = query(collection(db, 'liquidaciones'), where('ownerId', '==', currentUser.uid));
+            const qLiq = query(collection(db, 'liquidaciones'), where('ownerId', '==', WORKSPACE_ID));
             const liqSnap = await getDocs(qLiq);
             const cloudLiqList: LiquidacionMensual[] = [];
             liqSnap.forEach((docSnap) => {
@@ -418,7 +422,7 @@ export default function App() {
 
           // Sync Audit Logs
           try {
-            const qAudit = query(collection(db, 'audit_logs'), where('ownerId', '==', currentUser.uid));
+            const qAudit = query(collection(db, 'audit_logs'), where('ownerId', '==', WORKSPACE_ID));
             const auditSnap = await getDocs(qAudit);
             const cloudAuditList: AuditLog[] = [];
             auditSnap.forEach((docSnap) => {
@@ -434,19 +438,19 @@ export default function App() {
         } finally {
           setIsSyncing(false);
         }
-        } else {
-          // Fallback local storage
-          const localAs = localStorage.getItem('remax_hr_asistentes');
-          if (localAs) setAsistentes(JSON.parse(localAs));
-          const localCitas = localStorage.getItem('remax_hr_citas');
-          if (localCitas) setCitas(JSON.parse(localCitas));
-          const localConfig = localStorage.getItem('remax_hr_config');
-          if (localConfig) setConfig(JSON.parse(localConfig));
-          const localLiq = localStorage.getItem('remax_hr_liquidaciones');
-          if (localLiq) setLiquidaciones(JSON.parse(localLiq));
-          const localAudit = localStorage.getItem('remax_hr_audit_logs');
-          if (localAudit) setAuditLogs(JSON.parse(localAudit));
-        }
+      } else {
+        // Fallback local storage
+        const localAs = localStorage.getItem('remax_hr_asistentes');
+        if (localAs) setAsistentes(JSON.parse(localAs));
+        const localCitas = localStorage.getItem('remax_hr_citas');
+        if (localCitas) setCitas(JSON.parse(localCitas));
+        const localConfig = localStorage.getItem('remax_hr_config');
+        if (localConfig) setConfig(JSON.parse(localConfig));
+        const localLiq = localStorage.getItem('remax_hr_liquidaciones');
+        if (localLiq) setLiquidaciones(JSON.parse(localLiq));
+        const localAudit = localStorage.getItem('remax_hr_audit_logs');
+        if (localAudit) setAuditLogs(JSON.parse(localAudit));
+      }
     });
 
     return () => unsubscribe();
@@ -506,10 +510,10 @@ export default function App() {
         setIsSyncing(true);
         const batch = writeBatch(db);
         const docRef = doc(db, 'liquidaciones', liq.id);
-        batch.set(docRef, { ...liq, ownerId: auth.currentUser.uid });
+        batch.set(docRef, { ...liq, ownerId: WORKSPACE_ID });
         if (newAuditRecord) {
           const auditDocRef = doc(db, 'audit_logs', newAuditRecord.id);
-          batch.set(auditDocRef, { ...newAuditRecord, ownerId: auth.currentUser.uid });
+          batch.set(auditDocRef, { ...newAuditRecord, ownerId: WORKSPACE_ID });
         }
         await batch.commit();
       } catch (err) {
@@ -564,7 +568,7 @@ export default function App() {
       try {
         setIsSyncing(true);
         const docRef = doc(db, 'asistentes', as.id);
-        await setDoc(docRef, { ...as, ownerId: auth.currentUser.uid });
+        await setDoc(docRef, { ...as, ownerId: WORKSPACE_ID });
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, `asistentes/${as.id}`);
       } finally {
@@ -604,7 +608,7 @@ export default function App() {
       try {
         setIsSyncing(true);
         const docRef = doc(db, 'citas', cita.id);
-        await setDoc(docRef, { ...cita, ownerId: auth.currentUser.uid });
+        await setDoc(docRef, { ...cita, ownerId: WORKSPACE_ID });
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, `citas/${cita.id}`);
       } finally {
@@ -638,10 +642,10 @@ export default function App() {
     if (auth.currentUser) {
       try {
         setIsSyncing(true);
-        const docRef = doc(db, 'config_general', auth.currentUser.uid);
-        await setDoc(docRef, { ...newConfig, ownerId: auth.currentUser.uid });
+        const docRef = doc(db, 'config_general', WORKSPACE_ID);
+        await setDoc(docRef, { ...newConfig, ownerId: WORKSPACE_ID });
       } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, `config_general/${auth.currentUser.uid}`);
+        handleFirestoreError(err, OperationType.WRITE, `config_general/${WORKSPACE_ID}`);
       } finally {
         setIsSyncing(false);
       }
@@ -714,15 +718,15 @@ export default function App() {
           const matchingCita = updatedCitas.find(c => c.id === id);
           if (matchingCita) {
             const docRef = doc(db, 'citas', id);
-            batch.set(docRef, { ...matchingCita, ownerId: auth.currentUser!.uid });
+            batch.set(docRef, { ...matchingCita, ownerId: WORKSPACE_ID });
           }
         });
 
         const liqDocRef = doc(db, 'liquidaciones', liqId);
-        batch.set(liqDocRef, { ...logRecord, ownerId: auth.currentUser!.uid });
+        batch.set(liqDocRef, { ...logRecord, ownerId: WORKSPACE_ID });
 
         const auditDocRef = doc(db, 'audit_logs', auditId);
-        batch.set(auditDocRef, { ...newAuditRecord, ownerId: auth.currentUser!.uid });
+        batch.set(auditDocRef, { ...newAuditRecord, ownerId: WORKSPACE_ID });
 
         await batch.commit();
 

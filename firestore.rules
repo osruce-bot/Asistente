@@ -46,7 +46,7 @@ service cloud.firestore {
         data.cargo is string && data.cargo.size() <= 100 &&
         data.sueldoBasico is number && data.sueldoBasico >= 0 &&
         data.activo is bool &&
-        data.ownerId == request.auth.uid &&
+        (data.ownerId == request.auth.uid || data.ownerId == 'remax_expo') &&
         (!data.keys().hasAll(['llamadasMensuales']) || data.llamadasMensuales is map)
       );
     }
@@ -72,7 +72,7 @@ service cloud.firestore {
         data.estadoCita in ['AGENDADA', 'REALIZADA', 'CANCELADA'] &&
         data.estadoCierre in ['PENDIENTE', 'EN_SEGUIMIENTO', 'DESCARTADO', 'CERRADO', 'LIQUIDADO'] &&
         data.montoBono is number && data.montoBono >= 0 &&
-        data.ownerId == request.auth.uid &&
+        (data.ownerId == request.auth.uid || data.ownerId == 'remax_expo') &&
         (!data.keys().hasAll(['fechaCierre']) || (data.fechaCierre is string && data.fechaCierre.size() <= 20)) &&
         (!data.keys().hasAll(['notas']) || (data.notas is string && data.notas.size() <= 2000))
       );
@@ -87,7 +87,7 @@ service cloud.firestore {
         data.rmvVigente is number && data.rmvVigente >= 0 &&
         data.bonoVentaPredeterminado is number && data.bonoVentaPredeterminado >= 0 &&
         data.bonoAlquilerPredeterminado is number && data.bonoAlquilerPredeterminado >= 0 &&
-        data.ownerId == request.auth.uid
+        (data.ownerId == request.auth.uid || data.ownerId == 'remax_expo')
       );
     }
 
@@ -113,7 +113,7 @@ service cloud.firestore {
         data.banco is string && data.banco.size() <= 100 &&
         data.numeroCuenta is string && data.numeroCuenta.size() <= 100 &&
         data.cci is string && data.cci.size() <= 100 &&
-        data.ownerId == request.auth.uid &&
+        (data.ownerId == request.auth.uid || data.ownerId == 'remax_expo') &&
         (!data.keys().hasAll(['reciboHonorariosEntregado']) || data.reciboHonorariosEntregado is bool)
       );
     }
@@ -129,7 +129,7 @@ service cloud.firestore {
         data.timestamp is string && data.timestamp.size() <= 50 &&
         data.details is string && data.details.size() <= 1000 &&
         data.usuario is string && data.usuario.size() <= 150 &&
-        data.ownerId == request.auth.uid &&
+        (data.ownerId == request.auth.uid || data.ownerId == 'remax_expo') &&
         (!data.keys().hasAll(['asistenteNombre']) || (data.asistenteNombre is string && data.asistenteNombre.size() <= 150)) &&
         (!data.keys().hasAll(['mes']) || (data.mes is string && data.mes.size() <= 15)) &&
         (!data.keys().hasAll(['monto']) || (data.monto is number))
@@ -138,14 +138,11 @@ service cloud.firestore {
 
     // 2. match block for the "asistentes" collection
     match /asistentes/{asistenteId} {
-      allow get: if (
-        isSignedIn() && 
-        (resource == null || resource.data.ownerId == request.auth.uid)
-      );
+      allow get: if isSignedIn();
 
       allow list: if (
         isSignedIn() && 
-        resource.data.ownerId == request.auth.uid
+        (resource.data.ownerId == request.auth.uid || resource.data.ownerId == 'remax_expo')
       );
 
       allow create: if (
@@ -157,7 +154,7 @@ service cloud.firestore {
       allow update: if (
         isSignedIn() && 
         isValidId(asistenteId) && 
-        existing().ownerId == request.auth.uid && 
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo') && 
         isValidAsistente(incoming()) &&
         incoming().ownerId == existing().ownerId
       );
@@ -165,20 +162,17 @@ service cloud.firestore {
       allow delete: if (
         isSignedIn() && 
         isValidId(asistenteId) && 
-        existing().ownerId == request.auth.uid
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo')
       );
     }
 
     // 3. match block for the "citas" collection
     match /citas/{citaId} {
-      allow get: if (
-        isSignedIn() && 
-        (resource == null || resource.data.ownerId == request.auth.uid)
-      );
+      allow get: if isSignedIn();
 
       allow list: if (
         isSignedIn() && 
-        resource.data.ownerId == request.auth.uid
+        (resource.data.ownerId == request.auth.uid || resource.data.ownerId == 'remax_expo')
       );
 
       allow create: if (
@@ -190,7 +184,7 @@ service cloud.firestore {
       allow update: if (
         isSignedIn() && 
         isValidId(citaId) && 
-        existing().ownerId == request.auth.uid && 
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo') && 
         isValidCita(incoming()) &&
         incoming().ownerId == existing().ownerId
       );
@@ -198,20 +192,17 @@ service cloud.firestore {
       allow delete: if (
         isSignedIn() && 
         isValidId(citaId) && 
-        existing().ownerId == request.auth.uid
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo')
       );
     }
 
     // 4. match block for the "config_general" collection
     match /config_general/{configId} {
-      allow get: if (
-        isSignedIn() && 
-        (resource == null || resource.data.ownerId == request.auth.uid)
-      );
+      allow get: if isSignedIn();
 
       allow list: if (
         isSignedIn() && 
-        resource.data.ownerId == request.auth.uid
+        (resource.data.ownerId == request.auth.uid || resource.data.ownerId == 'remax_expo')
       );
 
       allow create: if (
@@ -223,7 +214,7 @@ service cloud.firestore {
       allow update: if (
         isSignedIn() && 
         isValidId(configId) && 
-        existing().ownerId == request.auth.uid && 
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo') && 
         isValidConfigGeneral(incoming()) &&
         incoming().ownerId == existing().ownerId
       );
@@ -231,20 +222,17 @@ service cloud.firestore {
       allow delete: if (
         isSignedIn() && 
         isValidId(configId) && 
-        existing().ownerId == request.auth.uid
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo')
       );
     }
 
     // 5. match block for the "liquidaciones" collection
     match /liquidaciones/{liquidacionId} {
-      allow get: if (
-        isSignedIn() && 
-        (resource == null || resource.data.ownerId == request.auth.uid)
-      );
+      allow get: if isSignedIn();
 
       allow list: if (
         isSignedIn() && 
-        resource.data.ownerId == request.auth.uid
+        (resource.data.ownerId == request.auth.uid || resource.data.ownerId == 'remax_expo')
       );
 
       allow create: if (
@@ -256,7 +244,7 @@ service cloud.firestore {
       allow update: if (
         isSignedIn() && 
         isValidId(liquidacionId) && 
-        existing().ownerId == request.auth.uid && 
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo') && 
         isValidLiquidacion(incoming()) &&
         incoming().ownerId == existing().ownerId
       );
@@ -264,20 +252,17 @@ service cloud.firestore {
       allow delete: if (
         isSignedIn() && 
         isValidId(liquidacionId) && 
-        existing().ownerId == request.auth.uid
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo')
       );
     }
 
     // 6. match block for the "audit_logs" collection
     match /audit_logs/{auditId} {
-      allow get: if (
-        isSignedIn() && 
-        (resource == null || resource.data.ownerId == request.auth.uid)
-      );
+      allow get: if isSignedIn();
 
       allow list: if (
         isSignedIn() && 
-        (!('ownerId' in resource.data) || resource.data.ownerId == request.auth.uid)
+        (!('ownerId' in resource.data) || resource.data.ownerId == request.auth.uid || resource.data.ownerId == 'remax_expo')
       );
 
       allow create: if (
@@ -289,7 +274,7 @@ service cloud.firestore {
       allow update: if (
         isSignedIn() && 
         isValidId(auditId) && 
-        existing().ownerId == request.auth.uid && 
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo') && 
         isValidAuditLog(incoming()) &&
         incoming().ownerId == existing().ownerId
       );
@@ -297,7 +282,7 @@ service cloud.firestore {
       allow delete: if (
         isSignedIn() && 
         isValidId(auditId) && 
-        existing().ownerId == request.auth.uid
+        (existing().ownerId == request.auth.uid || existing().ownerId == 'remax_expo')
       );
     }
   }
