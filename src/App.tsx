@@ -520,6 +520,30 @@ export default function App() {
     }
   };
 
+  // Google login handler
+  const handleGoogleLogin = async () => {
+    try {
+      setIsSyncing(true);
+      await signInWithPopup(auth, getGoogleProvider());
+    } catch (err) {
+      console.error('Google login failed:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Google logout handler (disconnect Google account and return to anonymous)
+  const handleGoogleLogout = async () => {
+    try {
+      setIsSyncing(true);
+      await signOut(auth);
+    } catch (err) {
+      console.error('Google logout failed:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   // Logout handler
   const handleLogout = async () => {
     setLogoutModalOpen(true);
@@ -733,6 +757,8 @@ export default function App() {
         }}
         user={user}
         isSyncing={isSyncing}
+        onGoogleLogin={handleGoogleLogin}
+        onGoogleLogout={handleGoogleLogout}
       />
     );
   }

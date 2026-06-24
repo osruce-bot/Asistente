@@ -11,7 +11,9 @@ import {
   Shield, 
   Users, 
   AlertCircle,
-  LockOpen
+  LockOpen,
+  Cloud,
+  LogOut
 } from 'lucide-react';
 import { ConfigGeneral, AccesoUsuario } from '../types';
 
@@ -20,13 +22,17 @@ interface LockScreenProps {
   onUnlock: (role: 'admin' | 'asistente', profileName?: string) => void;
   user: any; // User | null
   isSyncing: boolean;
+  onGoogleLogin: () => void;
+  onGoogleLogout: () => void;
 }
 
 export default function LockScreen({
   config,
   onUnlock,
   user,
-  isSyncing
+  isSyncing,
+  onGoogleLogin,
+  onGoogleLogout
 }: LockScreenProps) {
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -176,6 +182,46 @@ export default function LockScreen({
               * Los accesos y contraseñas de seguridad de los perfiles son gestionados por el Administrador desde la pestaña Configuración.
             </p>
           </form>
+
+          {/* Google Cloud Backup Sync Option */}
+          <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
+            {user && !user.isAnonymous ? (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Cloud className="w-4 h-4 text-blue-600 animate-pulse shrink-0" />
+                  <div className="text-left">
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Copia de Seguridad Activa</p>
+                    <p className="text-xs font-bold text-slate-700 truncate max-w-[170px] mt-0.5">{user.email}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={onGoogleLogout}
+                  className="flex items-center gap-1 text-[9px] text-slate-500 hover:text-red-600 font-bold uppercase tracking-wider bg-slate-200/50 hover:bg-slate-200 px-2 py-1 rounded transition-colors"
+                >
+                  <LogOut className="w-3 h-3" />
+                  Desvincular
+                </button>
+              </div>
+            ) : (
+              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-md space-y-2">
+                <div className="flex items-start gap-2 text-[10px] text-amber-800 leading-relaxed">
+                  <Cloud className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="font-bold">¿Deseas acceder desde Incógnito o evitar pérdida de datos?</strong> Inicia sesión con tu cuenta de Google para sincronizar tus contraseñas y citas guardadas en la nube.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={onGoogleLogin}
+                  className="w-full py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-[10px] uppercase tracking-wider rounded shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Cloud className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
+                  <span>Iniciar Sesión con Google</span>
+                </button>
+              </div>
+            )}
+          </div>
 
         </div>
 
