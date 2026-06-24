@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  /* Brand colors matching the requested palette */
+  --color-primary: #0554F2;     /* Intense premium blue */
+  --color-navy: #011640;        /* Deep navy */
+  --color-brand-red: #F20505;   /* Accent red */
+  --color-burgundy: #590202;    /* Deep burgundy */
+  --color-charcoal: #0D0D0D;    /* Midnight charcoal */
+}
+
+/* Custom general styling overrides */
+body {
+  background-color: #f8fafc;
+  color: #0D0D0D;
+}
+
+/* High Legibility classes based on brand colors */
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #011640 0%, #0554F2 100%);
+}
+
+.text-navy {
+  color: #011640;
+}
+
+.bg-navy {
+  background-color: #011640;
+}
+
+.text-primary {
+  color: #0554F2;
+}
+
+.bg-primary {
+  background-color: #0554F2;
+}
+
+.border-primary {
+  border-color: #0554F2;
+}
+
+.text-brand-red {
+  color: #F20505;
+}
+
+.bg-brand-red {
+  background-color: #F20505;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* System-wide Class overrides to match the premium color palette exactly */
+.bg-indigo-600,
+.bg-indigo-650,
+.bg-indigo-700 {
+  background-color: #0554F2 !important;
+}
+
+.hover\:bg-indigo-700:hover,
+.hover\:bg-indigo-750:hover,
+.hover\:bg-indigo-800:hover {
+  background-color: #0443c2 !important; /* Slightly darker shade of primary blue */
+}
+
+.text-indigo-600,
+.text-indigo-700,
+.text-indigo-850,
+.text-indigo-800 {
+  color: #0554F2 !important;
+}
+
+.bg-indigo-50,
+.bg-indigo-50\/20,
+.bg-indigo-100 {
+  background-color: rgba(5, 84, 242, 0.08) !important;
+  border-color: rgba(5, 84, 242, 0.15) !important;
+}
+
+/* Red / Rose Mappings to #F20505 */
+.text-rose-600,
+.text-red-650,
+.text-rose-700,
+.text-rose-800 {
+  color: #F20505 !important;
+}
+
+.bg-rose-600,
+.bg-red-600,
+.bg-rose-700 {
+  background-color: #F20505 !important;
+}
+
+.hover\:bg-rose-700:hover,
+.hover\:bg-rose-800:hover {
+  background-color: #c70404 !important;
+}
+
+.bg-rose-100,
+.bg-rose-50,
+.bg-red-50 {
+  background-color: rgba(242, 5, 5, 0.08) !important;
+  color: #F20505 !important;
+  border-color: rgba(242, 5, 5, 0.15) !important;
+}
+
+/* Deep Burgundy Mappings to #590202 */
+.text-amber-950,
+.text-amber-900,
+.text-amber-850 {
+  color: #590202 !important;
+}
+
+.border-amber-300,
+.border-amber-200 {
+  border-color: #590202 !important;
+}
+
+.bg-amber-50,
+.bg-amber-100 {
+  background-color: rgba(89, 2, 2, 0.06) !important;
+  color: #590202 !important;
+  border-color: rgba(89, 2, 2, 0.15) !important;
+}
+
+/* Midnight Charcoal Neutral Mappings to #0D0D0D */
+.text-slate-900,
+.text-slate-950 {
+  color: #0D0D0D !important;
+}
+
+/* Clean UI items borders */
+.border-slate-200 {
+  border-color: #e2e8f0 !important;
+}
+

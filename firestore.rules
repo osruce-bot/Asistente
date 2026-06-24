@@ -1,0 +1,304 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable global helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Standalone Validation Blueprints
+    function isValidAsistente(data) {
+      return (
+        data.keys().hasAll([
+          'id', 'nombreCompleto', 'dni', 'celular', 'correo', 'banco', 
+          'tipoCuenta', 'numeroCuenta', 'cci', 'fechaIngreso', 'cargo', 
+          'sueldoBasico', 'activo', 'ownerId'
+        ]) &&
+        data.keys().size() >= 14 && data.keys().size() <= 18 &&
+        data.id is string && data.id.size() <= 128 &&
+        data.nombreCompleto is string && data.nombreCompleto.size() <= 150 &&
+        data.dni is string && data.dni.size() <= 20 &&
+        data.celular is string && data.celular.size() <= 20 &&
+        data.correo is string && data.correo.size() <= 150 &&
+        data.banco is string && data.banco.size() <= 100 &&
+        data.tipoCuenta is string && data.tipoCuenta.size() <= 100 &&
+        data.numeroCuenta is string && data.numeroCuenta.size() <= 100 &&
+        data.cci is string && data.cci.size() <= 100 &&
+        data.fechaIngreso is string && data.fechaIngreso.size() <= 20 &&
+        data.cargo is string && data.cargo.size() <= 100 &&
+        data.sueldoBasico is number && data.sueldoBasico >= 0 &&
+        data.activo is bool &&
+        data.ownerId == request.auth.uid &&
+        (!data.keys().hasAll(['llamadasMensuales']) || data.llamadasMensuales is map)
+      );
+    }
+
+    function isValidCita(data) {
+      return (
+        data.keys().hasAll([
+          'id', 'asistenteId', 'asistenteNombre', 'fechaCita', 'horaCita', 
+          'clienteNombre', 'clienteCelular', 'direccionPropiedad', 'tipoPropiedad', 
+          'tipoOperacion', 'estadoCita', 'estadoCierre', 'montoBono', 'ownerId'
+        ]) &&
+        data.keys().size() >= 14 && data.keys().size() <= 18 &&
+        data.id is string && data.id.size() <= 128 &&
+        data.asistenteId is string && data.asistenteId.size() <= 128 &&
+        data.asistenteNombre is string && data.asistenteNombre.size() <= 150 &&
+        data.fechaCita is string && data.fechaCita.size() <= 20 &&
+        data.horaCita is string && data.horaCita.size() <= 10 &&
+        data.clienteNombre is string && data.clienteNombre.size() <= 150 &&
+        data.clienteCelular is string && data.clienteCelular.size() <= 20 &&
+        data.direccionPropiedad is string && data.direccionPropiedad.size() <= 500 &&
+        data.tipoPropiedad is string && data.tipoPropiedad.size() <= 100 &&
+        data.tipoOperacion in ['VENTA', 'ALQUILER'] &&
+        data.estadoCita in ['AGENDADA', 'REALIZADA', 'CANCELADA'] &&
+        data.estadoCierre in ['PENDIENTE', 'EN_SEGUIMIENTO', 'DESCARTADO', 'CERRADO', 'LIQUIDADO'] &&
+        data.montoBono is number && data.montoBono >= 0 &&
+        data.ownerId == request.auth.uid &&
+        (!data.keys().hasAll(['fechaCierre']) || (data.fechaCierre is string && data.fechaCierre.size() <= 20)) &&
+        (!data.keys().hasAll(['notas']) || (data.notas is string && data.notas.size() <= 2000))
+      );
+    }
+
+    function isValidConfigGeneral(data) {
+      return (
+        data.keys().hasAll([
+          'rmvVigente', 'bonoVentaPredeterminado', 'bonoAlquilerPredeterminado', 'ownerId'
+        ]) &&
+        data.keys().size() >= 4 && data.keys().size() <= 8 &&
+        data.rmvVigente is number && data.rmvVigente >= 0 &&
+        data.bonoVentaPredeterminado is number && data.bonoVentaPredeterminado >= 0 &&
+        data.bonoAlquilerPredeterminado is number && data.bonoAlquilerPredeterminado >= 0 &&
+        data.ownerId == request.auth.uid
+      );
+    }
+
+    function isValidLiquidacion(data) {
+      return (
+        data.keys().hasAll([
+          'id', 'asistenteId', 'asistenteNombre', 'mes', 'sueldoBasico', 
+          'totalBonos', 'montoTotal', 'fechaPago', 'estado', 'citasLiquidadasIds', 
+          'banco', 'numeroCuenta', 'cci', 'ownerId'
+        ]) &&
+        data.keys().size() >= 14 && data.keys().size() <= 18 &&
+        data.id is string && data.id.size() <= 128 &&
+        data.asistenteId is string && data.asistenteId.size() <= 128 &&
+        data.asistenteNombre is string && data.asistenteNombre.size() <= 150 &&
+        data.mes is string && data.mes.size() <= 15 &&
+        data.sueldoBasico is number && data.sueldoBasico >= 0 &&
+        data.totalBonos is number && data.totalBonos >= 0 &&
+        data.montoTotal is number && data.montoTotal >= 0 &&
+        data.fechaPago is string && data.fechaPago.size() <= 20 &&
+        data.estado in ['PENDIENTE', 'PAGADO'] &&
+        data.citasLiquidadasIds is list && data.citasLiquidadasIds.size() <= 500 &&
+        (data.citasLiquidadasIds.size() == 0 || data.citasLiquidadasIds[0] is string) &&
+        data.banco is string && data.banco.size() <= 100 &&
+        data.numeroCuenta is string && data.numeroCuenta.size() <= 100 &&
+        data.cci is string && data.cci.size() <= 100 &&
+        data.ownerId == request.auth.uid &&
+        (!data.keys().hasAll(['reciboHonorariosEntregado']) || data.reciboHonorariosEntregado is bool)
+      );
+    }
+
+    function isValidAuditLog(data) {
+      return (
+        data.keys().hasAll([
+          'id', 'action', 'timestamp', 'details', 'usuario', 'ownerId'
+        ]) &&
+        data.keys().size() >= 6 && data.keys().size() <= 10 &&
+        data.id is string && data.id.size() <= 128 &&
+        data.action in ['LIQUIDAR_CITAS', 'ENTREGA_RHE', 'OTRO'] &&
+        data.timestamp is string && data.timestamp.size() <= 50 &&
+        data.details is string && data.details.size() <= 1000 &&
+        data.usuario is string && data.usuario.size() <= 150 &&
+        data.ownerId == request.auth.uid &&
+        (!data.keys().hasAll(['asistenteNombre']) || (data.asistenteNombre is string && data.asistenteNombre.size() <= 150)) &&
+        (!data.keys().hasAll(['mes']) || (data.mes is string && data.mes.size() <= 15)) &&
+        (!data.keys().hasAll(['monto']) || (data.monto is number))
+      );
+    }
+
+    // 2. match block for the "asistentes" collection
+    match /asistentes/{asistenteId} {
+      allow get: if (
+        isSignedIn() && 
+        (resource == null || resource.data.ownerId == request.auth.uid)
+      );
+
+      allow list: if (
+        isSignedIn() && 
+        resource.data.ownerId == request.auth.uid
+      );
+
+      allow create: if (
+        isSignedIn() && 
+        isValidId(asistenteId) && 
+        isValidAsistente(incoming())
+      );
+
+      allow update: if (
+        isSignedIn() && 
+        isValidId(asistenteId) && 
+        existing().ownerId == request.auth.uid && 
+        isValidAsistente(incoming()) &&
+        incoming().ownerId == existing().ownerId
+      );
+
+      allow delete: if (
+        isSignedIn() && 
+        isValidId(asistenteId) && 
+        existing().ownerId == request.auth.uid
+      );
+    }
+
+    // 3. match block for the "citas" collection
+    match /citas/{citaId} {
+      allow get: if (
+        isSignedIn() && 
+        (resource == null || resource.data.ownerId == request.auth.uid)
+      );
+
+      allow list: if (
+        isSignedIn() && 
+        resource.data.ownerId == request.auth.uid
+      );
+
+      allow create: if (
+        isSignedIn() && 
+        isValidId(citaId) && 
+        isValidCita(incoming())
+      );
+
+      allow update: if (
+        isSignedIn() && 
+        isValidId(citaId) && 
+        existing().ownerId == request.auth.uid && 
+        isValidCita(incoming()) &&
+        incoming().ownerId == existing().ownerId
+      );
+
+      allow delete: if (
+        isSignedIn() && 
+        isValidId(citaId) && 
+        existing().ownerId == request.auth.uid
+      );
+    }
+
+    // 4. match block for the "config_general" collection
+    match /config_general/{configId} {
+      allow get: if (
+        isSignedIn() && 
+        (resource == null || resource.data.ownerId == request.auth.uid)
+      );
+
+      allow list: if (
+        isSignedIn() && 
+        resource.data.ownerId == request.auth.uid
+      );
+
+      allow create: if (
+        isSignedIn() && 
+        isValidId(configId) && 
+        isValidConfigGeneral(incoming())
+      );
+
+      allow update: if (
+        isSignedIn() && 
+        isValidId(configId) && 
+        existing().ownerId == request.auth.uid && 
+        isValidConfigGeneral(incoming()) &&
+        incoming().ownerId == existing().ownerId
+      );
+
+      allow delete: if (
+        isSignedIn() && 
+        isValidId(configId) && 
+        existing().ownerId == request.auth.uid
+      );
+    }
+
+    // 5. match block for the "liquidaciones" collection
+    match /liquidaciones/{liquidacionId} {
+      allow get: if (
+        isSignedIn() && 
+        (resource == null || resource.data.ownerId == request.auth.uid)
+      );
+
+      allow list: if (
+        isSignedIn() && 
+        resource.data.ownerId == request.auth.uid
+      );
+
+      allow create: if (
+        isSignedIn() && 
+        isValidId(liquidacionId) && 
+        isValidLiquidacion(incoming())
+      );
+
+      allow update: if (
+        isSignedIn() && 
+        isValidId(liquidacionId) && 
+        existing().ownerId == request.auth.uid && 
+        isValidLiquidacion(incoming()) &&
+        incoming().ownerId == existing().ownerId
+      );
+
+      allow delete: if (
+        isSignedIn() && 
+        isValidId(liquidacionId) && 
+        existing().ownerId == request.auth.uid
+      );
+    }
+
+    // 6. match block for the "audit_logs" collection
+    match /audit_logs/{auditId} {
+      allow get: if (
+        isSignedIn() && 
+        (resource == null || resource.data.ownerId == request.auth.uid)
+      );
+
+      allow list: if (
+        isSignedIn() && 
+        (!('ownerId' in resource.data) || resource.data.ownerId == request.auth.uid)
+      );
+
+      allow create: if (
+        isSignedIn() && 
+        isValidId(auditId) && 
+        isValidAuditLog(incoming())
+      );
+
+      allow update: if (
+        isSignedIn() && 
+        isValidId(auditId) && 
+        existing().ownerId == request.auth.uid && 
+        isValidAuditLog(incoming()) &&
+        incoming().ownerId == existing().ownerId
+      );
+
+      allow delete: if (
+        isSignedIn() && 
+        isValidId(auditId) && 
+        existing().ownerId == request.auth.uid
+      );
+    }
+  }
+}

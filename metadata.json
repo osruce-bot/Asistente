@@ -1,0 +1,6 @@
+{
+  "name": "RE/MAX Power Expo - RRHH & Citas",
+  "description": "Sistema de recursos humanos y registro de citas logradas para el pago de bonos y control de planillas híbridas de la asistente. Desarrollado para Oscar Russo (RE/MAX Power Expo, Lima, Perú).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

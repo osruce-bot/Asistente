@@ -1,0 +1,304 @@
+{
+  "entities": {
+    "asistente": {
+      "title": "Asistente",
+      "description": "Un asistente o colaborador de captación registrado con sus datos de recursos humanos y bancarios",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identificador único de la asistente"
+        },
+        "nombreCompleto": {
+          "type": "string",
+          "description": "Nombre completo del asistente"
+        },
+        "dni": {
+          "type": "string",
+          "description": "Documento Nacional de Identidad del asistente"
+        },
+        "celular": {
+          "type": "string",
+          "description": "Número de teléfono celular"
+        },
+        "correo": {
+          "type": "string",
+          "description": "Correo electrónico de contacto"
+        },
+        "banco": {
+          "type": "string",
+          "description": "Nombre del banco para abono de haberes"
+        },
+        "tipoCuenta": {
+          "type": "string",
+          "description": "Tipo de cuenta (Ahorros Sueldo, Corriente, etc.)"
+        },
+        "numeroCuenta": {
+          "type": "string",
+          "description": "Número de cuenta bancaria de soles"
+        },
+        "cci": {
+          "type": "string",
+          "description": "Código de Cuenta Interbancaria en Perú"
+        },
+        "fechaIngreso": {
+          "type": "string",
+          "description": "Fecha de ingreso del colaborador (YYYY-MM-DD)"
+        },
+        "cargo": {
+          "type": "string",
+          "description": "Cargo asignado en RE/MAX Power Expo"
+        },
+        "sueldoBasico": {
+          "type": "number",
+          "description": "Remuneración Mínima Vital (RMV) asignada fijos"
+        },
+        "activo": {
+          "type": "boolean",
+          "description": "Indica si el colaborador se encuentra activo para asignación y pagos"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "UID de Firebase Auth del usuario que registró al asistente"
+        }
+      },
+      "required": [
+        "id",
+        "nombreCompleto",
+        "dni",
+        "celular",
+        "correo",
+        "banco",
+        "tipoCuenta",
+        "numeroCuenta",
+        "cci",
+        "fechaIngreso",
+        "cargo",
+        "sueldoBasico",
+        "activo",
+        "ownerId"
+      ]
+    },
+    "cita": {
+      "title": "Cita",
+      "description": "Registro de una cita gestionada de captación de inmuebles con su estado de cierre y bonos",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identificador único del registro de la cita"
+        },
+        "asistenteId": {
+          "type": "string",
+          "description": "ID de la asistente asignada que agendó la cita"
+        },
+        "asistenteNombre": {
+          "type": "string",
+          "description": "Nombre de la asistente al momento de la cita"
+        },
+        "fechaCita": {
+          "type": "string",
+          "description": "Fecha en que se llevó a cabo la cita (YYYY-MM-DD)"
+        },
+        "horaCita": {
+          "type": "string",
+          "description": "Hora de la cita (HH:MM)"
+        },
+        "clienteNombre": {
+          "type": "string",
+          "description": "Nombre completo del propietario/cliente"
+        },
+        "clienteCelular": {
+          "type": "string",
+          "description": "Número celular del cliente"
+        },
+        "direccionPropiedad": {
+          "type": "string",
+          "description": "Dirección completa del inmueble a captar"
+        },
+        "tipoPropiedad": {
+          "type": "string",
+          "description": "Tipo de inmueble (Departamento, Oficina, Local, Casa, etc.)"
+        },
+        "tipoOperacion": {
+          "type": "string",
+          "enum": ["VENTA", "ALQUILER"],
+          "description": "Operación del inmueble"
+        },
+        "estadoCita": {
+          "type": "string",
+          "enum": ["AGENDADA", "REALIZADA", "CANCELADA"],
+          "description": "Estado de ejecución de la cita"
+        },
+        "estadoCierre": {
+          "type": "string",
+          "enum": ["PENDIENTE", "EN_SEGUIMIENTO", "DESCARTADO", "CERRADO", "LIQUIDADO"],
+          "description": "Estado del cierre comercial"
+        },
+        "fechaCierre": {
+          "type": "string",
+          "description": "Fecha del cierre de venta o alquiler (YYYY-MM-DD)"
+        },
+        "montoBono": {
+          "type": "number",
+          "description": "Monto de comisión/bonificación en Soles por la cita"
+        },
+        "notas": {
+          "type": "string",
+          "description": "Notas u observaciones operativas"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "UID de Firebase Auth del usuario creador"
+        }
+      },
+      "required": [
+        "id",
+        "asistenteId",
+        "asistenteNombre",
+        "fechaCita",
+        "horaCita",
+        "clienteNombre",
+        "clienteCelular",
+        "direccionPropiedad",
+        "tipoPropiedad",
+        "tipoOperacion",
+        "estadoCita",
+        "estadoCierre",
+        "montoBono",
+        "ownerId"
+      ]
+    },
+    "config_general": {
+      "title": "ConfigGeneral",
+      "description": "Parámetros globales de compensación, sueldo mínimo y bonificaciones por defecto",
+      "type": "object",
+      "properties": {
+        "rmvVigente": {
+          "type": "number",
+          "description": "Remuneración Mínima Vital de Perú (S/ 1,130 fijos)"
+        },
+        "bonoVentaPredeterminado": {
+          "type": "number",
+          "description": "Comisión variable estándar por cierre de venta (S/ 150)"
+        },
+        "bonoAlquilerPredeterminado": {
+          "type": "number",
+          "description": "Comisión variable estándar por cierre de alquiler (S/ 80)"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "UID de Firebase del usuario configurador"
+        }
+      },
+      "required": [
+        "rmvVigente",
+        "bonoVentaPredeterminado",
+        "bonoAlquilerPredeterminado",
+        "ownerId"
+      ]
+    },
+    "liquidacion": {
+      "title": "LiquidacionMensual",
+      "description": "Reporte histórico de planilla procesada, sueldo fijo pagado y bonificaciones",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID del registro de liquidación (ej. liq-[asistenteId]-[mes])"
+        },
+        "asistenteId": {
+          "type": "string",
+          "description": "ID de la asistente liquidada"
+        },
+        "asistenteNombre": {
+          "type": "string",
+          "description": "Nombre completo de la asistente"
+        },
+        "mes": {
+          "type": "string",
+          "description": "Mes y año correspondiente (YYYY-MM)"
+        },
+        "sueldoBasico": {
+          "type": "number",
+          "description": "Sueldo fijo pagado (RMV)"
+        },
+        "totalBonos": {
+          "type": "number",
+          "description": "Monto total de bonificaciones de citas liquidadas"
+        },
+        "montoTotal": {
+          "type": "number",
+          "description": "Suma de sueldo fijo y comisiones variables transferidas"
+        },
+        "fechaPago": {
+          "type": "string",
+          "description": "Fecha del procesamiento y pago (YYYY-MM-DD)"
+        },
+        "estado": {
+          "type": "string",
+          "enum": ["PENDIENTE", "PAGADO"],
+          "description": "Estado de la liquidación"
+        },
+        "citasLiquidadasIds": {
+          "type": "array",
+          "description": "Lista de IDs de citas cuyas bonificaciones fueron pagadas en este lote"
+        },
+        "banco": {
+          "type": "string",
+          "description": "Nombre del banco receptor"
+        },
+        "numeroCuenta": {
+          "type": "string",
+          "description": "Número de cuenta receptora"
+        },
+        "cci": {
+          "type": "string",
+          "description": "Código de Cuenta Interbancaria receptor"
+        },
+        "reciboHonorariosEntregado": {
+          "type": "boolean",
+          "description": "Indica si se recibió el recibo por honorarios (RHe) emitido por la asistente por el monto pagado"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "UID de Firebase Auth del usuario que ejecutó la liquidación"
+        }
+      },
+      "required": [
+        "id",
+        "asistenteId",
+        "asistenteNombre",
+        "mes",
+        "sueldoBasico",
+        "totalBonos",
+        "montoTotal",
+        "fechaPago",
+        "estado",
+        "citasLiquidadasIds",
+        "banco",
+        "numeroCuenta",
+        "cci",
+        "ownerId"
+      ]
+    }
+  },
+  "firestore": {
+    "asistentes": {
+      "schema": "asistente",
+      "description": "Colección de colaboradores/asistentes de captación gestionados por el usuario"
+    },
+    "citas": {
+      "schema": "cita",
+      "description": "Colección de citas agendadas y gestionadas por las asistentes"
+    },
+    "config_general": {
+      "schema": "config_general",
+      "description": "Configuraciones generales de sueldo básico y montos predeterminados de comisión"
+    },
+    "liquidaciones": {
+      "schema": "liquidacion",
+      "description": "Historial de planillas liquidadas y registradas en el sistema"
+    }
+  }
+}
