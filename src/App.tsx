@@ -346,10 +346,12 @@ export default function App() {
           setSyncError(null);
 
           // Sync Global Config
+          let configExists = false;
           try {
             const configDocRef = doc(db, 'config_general', WORKSPACE_ID);
             const configSnap = await getDoc(configDocRef);
             if (configSnap.exists()) {
+              configExists = true;
               const cloudConfig = configSnap.data() as ConfigGeneral;
               setConfig(cloudConfig);
               try {
@@ -390,7 +392,7 @@ export default function App() {
               cloudAsList.push(docSnap.data() as Asistente);
             });
 
-            if (cloudAsList.length > 0) {
+            if (cloudAsList.length > 0 || configExists) {
               setAsistentes(cloudAsList);
               try {
                 localStorage.setItem('remax_hr_asistentes', JSON.stringify(cloudAsList));
@@ -412,6 +414,12 @@ export default function App() {
                 batch.set(docRef, { ...as, ownerId: WORKSPACE_ID });
               });
               await batch.commit();
+              setAsistentes(localAsList);
+              try {
+                localStorage.setItem('remax_hr_asistentes', JSON.stringify(localAsList));
+              } catch (e) {
+                console.warn('LocalStorage error:', e);
+              }
             }
           } catch (err) {
             console.error('Error syncing asistentes, using fallback:', err);
@@ -434,7 +442,7 @@ export default function App() {
               cloudCitasList.push(docSnap.data() as Cita);
             });
 
-            if (cloudCitasList.length > 0) {
+            if (cloudCitasList.length > 0 || configExists) {
               setCitas(cloudCitasList);
               try {
                 localStorage.setItem('remax_hr_citas', JSON.stringify(cloudCitasList));
@@ -456,6 +464,12 @@ export default function App() {
                 batch.set(docRef, { ...c, ownerId: WORKSPACE_ID });
               });
               await batch.commit();
+              setCitas(localCitasList);
+              try {
+                localStorage.setItem('remax_hr_citas', JSON.stringify(localCitasList));
+              } catch (e) {
+                console.warn('LocalStorage error:', e);
+              }
             }
           } catch (err) {
             console.error('Error syncing citas, using fallback:', err);
