@@ -5,6 +5,7 @@
 
 import { Cita, Asistente } from '../types';
 import { formatPEN } from './currency';
+import { formatToDDMMYYYY } from './date';
 
 /**
  * Generates and downloads an Excel spreadsheet for the monthly payroll of an assistant
@@ -55,7 +56,7 @@ export async function exportCitasToExcel(
   const rows = citas.map((cita, index) => {
     return [
       index + 1,
-      cita.fechaCita,
+      formatToDDMMYYYY(cita.fechaCita),
       cita.horaCita,
       cita.clienteNombre,
       cita.direccionPropiedad,
@@ -188,7 +189,7 @@ export async function exportCitasToPDF(
   doc.text(asistente.nombreCompleto, 150, 155);
   doc.text(asistente.dni, 150, 172);
   doc.text(asistente.cargo || 'Asistente de Captaciones', 150, 189);
-  doc.text(asistente.fechaIngreso || '--', 150, 206);
+  doc.text(formatToDDMMYYYY(asistente.fechaIngreso), 150, 206);
 
   // Right Column: Pago Details
   doc.setFont('Helvetica', 'bold');
@@ -249,14 +250,19 @@ export async function exportCitasToPDF(
 
   const closedCitas = citas.filter(c => c.estadoCierre === 'CERRADO' || c.estadoCierre === 'LIQUIDADO');
 
-  const tableRows = closedCitas.map(c => [
-    c.fechaCita,
-    c.clienteNombre.length > 20 ? c.clienteNombre.substring(0, 18) + '...' : c.clienteNombre,
-    c.direccionPropiedad.length > 22 ? c.direccionPropiedad.substring(0, 20) + '...' : c.direccionPropiedad,
-    c.tipoOperacion,
-    c.estadoCierre,
-    `S/. ${c.montoBono.toFixed(2)}`
-  ]);
+  const tableRows = closedCitas.map(c => {
+    const safeFecha = formatToDDMMYYYY(c.fechaCita);
+    const safeNombre = c.clienteNombre || 'Sin nombre';
+    const safeDireccion = c.direccionPropiedad || 'Sin dirección';
+    return [
+      safeFecha,
+      safeNombre.length > 20 ? safeNombre.substring(0, 18) + '...' : safeNombre,
+      safeDireccion.length > 22 ? safeDireccion.substring(0, 20) + '...' : safeDireccion,
+      c.tipoOperacion,
+      c.estadoCierre,
+      `S/. ${c.montoBono.toFixed(2)}`
+    ];
+  });
 
   if (tableRows.length === 0) {
     tableRows.push(['--', 'Sin citas cerradas en este mes', '--', '--', '--', 'S/. 0.00']);

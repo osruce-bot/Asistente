@@ -21,9 +21,11 @@ export interface Asistente {
 }
 
 export enum EstadoCita {
+  PROSPECTO = 'PROSPECTO',
   AGENDADA = 'AGENDADA',
   REALIZADA = 'REALIZADA',
   CANCELADA = 'CANCELADA',
+  REPROGRAMAR = 'REPROGRAMAR',
 }
 
 export enum EstadoCierre {
@@ -55,6 +57,9 @@ export interface Cita {
   fechaCierre?: string; // YYYY-MM-DD (fecha del cierre efectivo)
   montoBono: number; // Monto del bono asignado por cierre
   notas?: string;
+  fechaLlamada?: string; // YYYY-MM-DD (fecha de llamada del prospecto)
+  fechaNuevaLlamada?: string; // YYYY-MM-DD (fecha para reprogramar llamada)
+  distritoPropiedad?: string; // distrito
 }
 
 export interface AccesoUsuario {

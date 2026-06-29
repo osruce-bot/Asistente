@@ -23,6 +23,7 @@ import {
 import { Asistente, Cita, EstadoCierre, ConfigGeneral, LiquidacionMensual, AuditLog } from '../types';
 import { formatPEN } from '../utils/currency';
 import { exportCitasToPDF } from '../utils/export';
+import { formatToDDMMYYYY } from '../utils/date';
 
 interface ReportesLiquidacionProps {
   asistentes: Asistente[];
@@ -352,7 +353,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                         <p className="text-[10px] text-slate-500 font-sans italic flex items-center gap-1">
                           <Clock className="w-3 h-3 text-slate-400" />
-                          Último día de ingreso: {asistente.fechaIngreso}
+                          Último día de ingreso: {formatToDDMMYYYY(asistente.fechaIngreso)}
                         </p>
 
                         <div className="flex items-center gap-2">

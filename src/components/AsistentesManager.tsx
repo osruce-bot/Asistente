@@ -22,11 +22,14 @@ import {
   Clock,
   Info
 } from 'lucide-react';
-import { Asistente, ConfigGeneral } from '../types';
+import { Asistente, ConfigGeneral, Cita } from '../types';
 import { formatPEN } from '../utils/currency';
+import { formatToDDMMYYYY } from '../utils/date';
+import { capitalizeWords } from '../utils/string';
 
 interface AsistentesManagerProps {
   asistentes: Asistente[];
+  citas: Cita[];
   config: ConfigGeneral;
   onSaveAsistente: (asistente: Asistente) => void;
   onDeleteAsistente: (id: string) => void;
@@ -36,6 +39,7 @@ interface AsistentesManagerProps {
 
 export default function AsistentesManager({
   asistentes,
+  citas,
   config,
   onSaveAsistente,
   onDeleteAsistente,
@@ -277,7 +281,7 @@ export default function AsistentesManager({
                     id="input_nombre"
                     placeholder="Ej. María Fernanda Morales"
                     value={nombreCompleto}
-                    onChange={(e) => setNombreCompleto(e.target.value)}
+                    onChange={(e) => setNombreCompleto(capitalizeWords(e.target.value))}
                     className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 font-medium"
                   />
                 </div>
@@ -338,7 +342,7 @@ export default function AsistentesManager({
                     id="input_cargo"
                     placeholder="Ej. Asistente de Captaciones"
                     value={cargo}
-                    onChange={(e) => setCargo(e.target.value)}
+                    onChange={(e) => setCargo(capitalizeWords(e.target.value))}
                     className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900"
                   />
                 </div>
@@ -411,7 +415,7 @@ export default function AsistentesManager({
                         id="input_tipo_cuenta"
                         placeholder="Sueldo, Ahorros..."
                         value={tipoCuenta}
-                        onChange={(e) => setTipoCuenta(e.target.value)}
+                        onChange={(e) => setTipoCuenta(capitalizeWords(e.target.value))}
                         className="block w-full py-1.5 px-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none text-slate-900"
                       />
                     </div>
@@ -535,19 +539,31 @@ export default function AsistentesManager({
                           <div className="text-[10px] text-slate-400 font-mono">
                             {userRole === 'admin' && `DNI: ${as.dni} • `}Cargo: {as.cargo}
                           </div>
-                          {as.llamadasMensuales && Object.keys(as.llamadasMensuales).length > 0 && (
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {Object.entries(as.llamadasMensuales)
-                                .sort((a, b) => b[0].localeCompare(a[0])) // latest months first
-                                .slice(0, 3) // show last 3 months
-                                .map(([mes, count]) => (
-                                  <span key={mes} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-mono font-bold rounded border border-slate-200" title={`Llamadas en ${mes}`}>
-                                    <Phone className="w-2.5 h-2.5 text-slate-400" />
-                                    {mes}: {count} llam.
-                                  </span>
-                                ))}
-                            </div>
-                          )}
+                          {(() => {
+                            const assistantCitas = citas.filter(c => c.asistenteId === as.id && !!c.fechaLlamada);
+                            const callsByMonth: { [month: string]: number } = {};
+                            assistantCitas.forEach(c => {
+                              if (c.fechaLlamada) {
+                                const m = c.fechaLlamada.substring(0, 7); // YYYY-MM
+                                callsByMonth[m] = (callsByMonth[m] || 0) + 1;
+                              }
+                            });
+                            const entries = Object.entries(callsByMonth);
+                            if (entries.length === 0) return null;
+                            return (
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {entries
+                                  .sort((a, b) => b[0].localeCompare(a[0])) // latest months first
+                                  .slice(0, 3) // show last 3 months
+                                  .map(([mes, count]) => (
+                                    <span key={mes} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-mono font-bold rounded border border-slate-200" title={`Llamadas en ${formatToDDMMYYYY(mes)}`}>
+                                      <Phone className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                      {formatToDDMMYYYY(mes)}: {count} llam.
+                                    </span>
+                                  ))}
+                              </div>
+                            );
+                          })()}
                         </td>
 
                         {/* Contact details */}

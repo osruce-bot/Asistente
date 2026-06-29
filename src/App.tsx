@@ -124,7 +124,9 @@ const getPresetCitas = (): Cita[] => {
       estadoCierre: EstadoCierre.CERRADO,
       fechaCierre: `${currentMonth}-15`,
       montoBono: 150,
-      notas: 'Cita muy productiva. El propietario firmó la exclusividad de venta por 6 meses.'
+      notas: 'Cita muy productiva. El propietario firmó la exclusividad de venta por 6 meses.',
+      fechaLlamada: `${currentMonth}-08`,
+      distritoPropiedad: 'Santiago de Surco'
     },
     {
       id: 'cita-2',
@@ -141,7 +143,9 @@ const getPresetCitas = (): Cita[] => {
       estadoCierre: EstadoCierre.CERRADO,
       fechaCierre: `${currentMonth}-18`,
       montoBono: 80,
-      notas: 'Oficina comercial. Se logró cerrar el contrato de alquiler por 2 años.'
+      notas: 'Oficina comercial. Se logró cerrar el contrato de alquiler por 2 años.',
+      fechaLlamada: `${currentMonth}-10`,
+      distritoPropiedad: 'Miraflores'
     },
     {
       id: 'cita-3',
@@ -157,7 +161,9 @@ const getPresetCitas = (): Cita[] => {
       estadoCita: EstadoCita.AGENDADA,
       estadoCierre: EstadoCierre.PENDIENTE,
       montoBono: 150,
-      notas: 'Reunión confirmada para coordinar la toma de fotos profesionales.'
+      notas: 'Reunión confirmada para coordinar la toma de fotos profesionales.',
+      fechaLlamada: `${currentMonth}-18`,
+      distritoPropiedad: 'Santiago de Surco'
     },
     {
       id: 'cita-4',
@@ -174,7 +180,9 @@ const getPresetCitas = (): Cita[] => {
       estadoCierre: EstadoCierre.LIQUIDADO,
       fechaCierre: `${prevMonth}-12`,
       montoBono: 150,
-      notas: 'Ya liquidado en la planilla del mes anterior de forma satisfactoria.'
+      notas: 'Ya liquidado en la planilla del mes anterior de forma satisfactoria.',
+      fechaLlamada: `${prevMonth}-02`,
+      distritoPropiedad: 'Santiago de Surco'
     },
     {
       id: 'cita-5',
@@ -190,7 +198,9 @@ const getPresetCitas = (): Cita[] => {
       estadoCita: EstadoCita.CANCELADA,
       estadoCierre: EstadoCierre.DESCARTADO,
       montoBono: 150,
-      notas: 'El propietario desistió de vender el local comercial por motivos personales.'
+      notas: 'El propietario desistió de vender el local comercial por motivos personales.',
+      fechaLlamada: `${currentMonth}-01`,
+      distritoPropiedad: 'Lima (Cercado)'
     }
   ];
 };
@@ -967,8 +977,8 @@ export default function App() {
                   }`}
                   id="tab_citas_btn"
                 >
-                  <Calendar className="w-3.5 h-3.5" />
-                  Registro Citas Logradas
+                  <Users className="w-3.5 h-3.5" />
+                  Prospectos
                 </button>
 
                 {/* 4. Payroll report Tab */}
@@ -1025,6 +1035,7 @@ export default function App() {
           {activeTab === 'asistentes' && (
             <AsistentesManager 
               asistentes={asistentes}
+              citas={citas}
               config={config}
               onSaveAsistente={handleSaveAsistente}
               onDeleteAsistente={handleDeleteAsistente}

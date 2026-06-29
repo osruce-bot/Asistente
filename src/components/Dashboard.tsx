@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { Asistente, Cita, EstadoCita, EstadoCierre, ConfigGeneral } from '../types';
 import { formatPEN } from '../utils/currency';
+import { formatToDDMMYYYY } from '../utils/date';
 
 interface DashboardProps {
   asistentes: Asistente[];
@@ -46,10 +47,10 @@ export default function Dashboard({
     return `${d.getFullYear()}-${mm}`;
   });
 
-  // Filter appointments by selected month
+  // Filter appointments by selected month (only real appointments, not prospects)
   const filteredCitas = filterMonth
-    ? citas.filter(c => c.fechaCita.startsWith(filterMonth))
-    : citas;
+    ? citas.filter(c => c.estadoCita !== EstadoCita.PROSPECTO && c.fechaCita && c.fechaCita.startsWith(filterMonth))
+    : citas.filter(c => c.estadoCita !== EstadoCita.PROSPECTO);
 
   // Stats calculations
   const totalAsistentes = asistentes.length;
@@ -74,13 +75,10 @@ export default function Dashboard({
     .filter(c => c.estadoCierre === EstadoCierre.LIQUIDADO)
     .reduce((sum, c) => sum + c.montoBono, 0);
 
-  // Calls made in selected month / overall
+  // Calls made (calculated as prospects with a registered call date in selected month)
   const totalLlamadas = filterMonth
-    ? asistentes.reduce((sum, as) => sum + (as.llamadasMensuales?.[filterMonth] || 0), 0)
-    : asistentes.reduce((sum, as) => {
-        const map = as.llamadasMensuales || {};
-        return sum + Object.values(map).reduce((s, v) => s + v, 0);
-      }, 0);
+    ? citas.filter(c => c.fechaLlamada?.startsWith(filterMonth)).length
+    : citas.filter(c => !!c.fechaLlamada).length;
 
   // Conversion rate: Citas Realizadas / Total Citas
   const conversionCitasRealizadas = totalCitas > 0 ? Math.round((citasRealizadas / totalCitas) * 100) : 0;
@@ -285,7 +283,7 @@ export default function Dashboard({
                 </p>
               </div>
               <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-bold uppercase">
-                {filterMonth ? `Mes: ${filterMonth}` : "Historial Completo"}
+                {filterMonth ? `Mes: ${formatToDDMMYYYY(filterMonth)}` : "Historial Completo"}
               </span>
             </div>
 
@@ -432,14 +430,15 @@ export default function Dashboard({
                       </tr>
                     ) : (
                       asistentes.map((as) => {
+                        // count real calls registered for this assistant in selected month / overall
                         const llamadasDelMes = filterMonth 
-                          ? (as.llamadasMensuales?.[filterMonth] || 0)
-                          : Object.values(as.llamadasMensuales || {}).reduce((s, v) => s + v, 0);
+                          ? citas.filter(c => c.asistenteId === as.id && c.fechaLlamada?.startsWith(filterMonth)).length
+                          : citas.filter(c => c.asistenteId === as.id && !!c.fechaLlamada).length;
 
-                        // filter appointments for this assistant
-                        const citasAsistente = citas.filter(c => c.asistenteId === as.id);
+                        // filter appointments for this assistant (excluding prospects, since they are not appointments yet)
+                        const citasAsistente = citas.filter(c => c.asistenteId === as.id && c.estadoCita !== EstadoCita.PROSPECTO);
                         const citasFiltradas = filterMonth 
-                          ? citasAsistente.filter(c => c.fechaCita.startsWith(filterMonth))
+                          ? citasAsistente.filter(c => c.fechaCita && c.fechaCita.startsWith(filterMonth))
                           : citasAsistente;
 
                         // filter closed/liquidated appointments
@@ -461,7 +460,7 @@ export default function Dashboard({
                               <span className="text-[9px] text-slate-400 font-mono block">Cargo: {as.cargo}</span>
                             </td>
                             <td className="py-2.5 px-3 text-center font-mono font-semibold text-slate-500">
-                              {filterMonth ? filterMonth : "Histórico Total"}
+                              {filterMonth ? formatToDDMMYYYY(filterMonth) : "Histórico Total"}
                             </td>
                             <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-900">
                               {llamadasDelMes}
