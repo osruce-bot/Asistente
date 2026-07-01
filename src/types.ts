@@ -94,6 +94,8 @@ export interface LiquidacionMensual {
   numeroCuenta: string;
   cci: string;
   reciboHonorariosEntregado?: boolean;
+  montoAdelantoQuincena?: number;
+  reciboAdelantoEntregado?: boolean;
 }
 
 export interface AuditLog {

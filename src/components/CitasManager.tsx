@@ -665,9 +665,9 @@ export default function CitasManager({
                 </label>
                 <select
                   id="select_estado_cita"
-                  value={userRole === 'admin' ? estadoCita : (editingId ? (citas.find(c => c.id === editingId)?.estadoCita || EstadoCita.PROSPECTO) : EstadoCita.PROSPECTO)}
+                  value={estadoCita}
                   onChange={(e) => setEstadoCita(e.target.value as EstadoCita)}
-                  disabled={userRole !== 'admin' || isCelularRepetido}
+                  disabled={isCelularRepetido}
                   className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value={EstadoCita.PROSPECTO}>Prospecto</option>
@@ -676,9 +676,6 @@ export default function CitasManager({
                   <option value={EstadoCita.REALIZADA}>Exitosa</option>
                   <option value={EstadoCita.CANCELADA}>Cancelada</option>
                 </select>
-                {userRole !== 'admin' && (
-                  <p className="text-[8px] text-slate-400 mt-0.5">Control de Estado exclusivo para Administradores.</p>
-                )}
               </div>
 
               {estadoCita === EstadoCita.REPROGRAMAR ? (

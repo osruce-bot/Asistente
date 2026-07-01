@@ -131,6 +131,7 @@ export async function exportCitasToPDF(
     sueldoBasico: number;
     totalBonos: number;
     totalPagar: number;
+    montoAdelantoQuincena?: number;
   }
 ) {
   const { jsPDF } = await import('jspdf');
@@ -220,12 +221,18 @@ export async function exportCitasToPDF(
   doc.setTextColor(textDark[0], textDark[1], textDark[2]);
   doc.text('1. Sueldo Básico Fijo Mensual (RMV de Ley Vigente):', 60, 275);
   doc.text('2. Comisión Variable (Suma de Bonos de Citas Cerradas Efectivas):', 60, 292);
-  doc.text('3. Descuentos / Retenciones autorizadas:', 60, 309);
+  
+  const hasAdelanto = typeof totales.montoAdelantoQuincena === 'number' && totales.montoAdelantoQuincena > 0;
+  const labelAdelanto = hasAdelanto
+    ? `3. Adelanto en Quincena (Descontado con RHe):`
+    : '3. Descuentos / Retenciones autorizadas:';
+  doc.text(labelAdelanto, 60, 309);
 
   doc.setFont('Helvetica', 'bold');
   doc.text(formatPEN(totales.sueldoBasico), 480, 275, { align: 'right' });
   doc.text(formatPEN(totales.totalBonos), 480, 292, { align: 'right' });
-  doc.text(formatPEN(0), 480, 309, { align: 'right' });
+  const valAdelanto = hasAdelanto ? -totales.montoAdelantoQuincena! : 0;
+  doc.text(formatPEN(valAdelanto), 480, 309, { align: 'right' });
 
   // Pagar Summary Callout Box
   doc.setFillColor(239, 246, 255); // blue-50

@@ -592,21 +592,40 @@ export default function App() {
     saveAndSyncLiquidaciones(updated);
 
     let newAuditRecord: AuditLog | null = null;
-    if (originalLiq && originalLiq.reciboHonorariosEntregado !== liq.reciboHonorariosEntregado) {
-      const auditId = `audit-${Date.now()}`;
-      const userDisplay = auth.currentUser?.email || (userRole === 'admin' ? 'Oscar Russo (Admin)' : 'Asistente');
-      const actionDesc = liq.reciboHonorariosEntregado ? 'Entregado' : 'Pendiente';
-      newAuditRecord = {
-        id: auditId,
-        action: 'ENTREGA_RHE',
-        timestamp: new Date().toISOString(),
-        details: `Se cambió estado de Recibo por Honorarios (RHe) a "${actionDesc}" para ${liq.asistenteNombre} - Periodo ${liq.mes}`,
-        usuario: userDisplay,
-        asistenteNombre: liq.asistenteNombre,
-        mes: liq.mes,
-        monto: liq.montoTotal
-      };
-      saveAndSyncAuditLogs([newAuditRecord, ...auditLogs]);
+    const userDisplay = auth.currentUser?.email || (userRole === 'admin' ? 'Oscar Russo (Admin)' : 'Asistente');
+
+    if (originalLiq) {
+      if (originalLiq.reciboHonorariosEntregado !== liq.reciboHonorariosEntregado) {
+        const auditId = `audit-${Date.now()}`;
+        const actionDesc = liq.reciboHonorariosEntregado ? 'Entregado' : 'Pendiente';
+        newAuditRecord = {
+          id: auditId,
+          action: 'ENTREGA_RHE',
+          timestamp: new Date().toISOString(),
+          details: `Se cambió estado de RHe Fin de Mes a "${actionDesc}" para ${liq.asistenteNombre} - Periodo ${liq.mes}`,
+          usuario: userDisplay,
+          asistenteNombre: liq.asistenteNombre,
+          mes: liq.mes,
+          monto: liq.montoTotal
+        };
+      } else if (originalLiq.reciboAdelantoEntregado !== liq.reciboAdelantoEntregado) {
+        const auditId = `audit-${Date.now()}`;
+        const actionDesc = liq.reciboAdelantoEntregado ? 'Entregado' : 'Pendiente';
+        newAuditRecord = {
+          id: auditId,
+          action: 'ENTREGA_RHE',
+          timestamp: new Date().toISOString(),
+          details: `Se cambió estado de RHe Adelanto Quincena a "${actionDesc}" para ${liq.asistenteNombre} - Periodo ${liq.mes}`,
+          usuario: userDisplay,
+          asistenteNombre: liq.asistenteNombre,
+          mes: liq.mes,
+          monto: liq.montoAdelantoQuincena || 0
+        };
+      }
+
+      if (newAuditRecord) {
+        saveAndSyncAuditLogs([newAuditRecord, ...auditLogs]);
+      }
     }
 
     if (auth.currentUser) {
@@ -757,7 +776,18 @@ export default function App() {
   };
 
   // 6. LIQUIDATE CITAS (PLANILLA MONTH CLOSE)
-  const handleLiquidateCitas = async (asistenteId: string, mes: string, citasIdsToLiquidate: string[], sueldo: number, bonos: number) => {
+  const handleLiquidateCitas = async (
+    asistenteId: string,
+    mes: string,
+    citasIdsToLiquidate: string[],
+    sueldo: number,
+    bonos: number,
+    montoAdelanto?: number,
+    reciboAdelantoEntregado?: boolean
+  ) => {
+    const valAdelanto = montoAdelanto || 0;
+    const valReciboAdelanto = !!reciboAdelantoEntregado;
+
     // 1. Update matching citas statuses locally
     const updatedCitas = citas.map(c => {
       if (citasIdsToLiquidate.includes(c.id)) {
@@ -782,7 +812,9 @@ export default function App() {
       mes,
       sueldoBasico: sueldo,
       totalBonos: bonos,
-      montoTotal: sueldo + bonos,
+      montoAdelantoQuincena: valAdelanto,
+      reciboAdelantoEntregado: valReciboAdelanto,
+      montoTotal: sueldo + bonos - valAdelanto,
       fechaPago: new Date().toISOString().split('T')[0],
       estado: 'PAGADO',
       citasLiquidadasIds: citasIdsToLiquidate,
@@ -802,11 +834,11 @@ export default function App() {
       id: auditId,
       action: 'LIQUIDAR_CITAS',
       timestamp: new Date().toISOString(),
-      details: `Se liquidó la planilla de ${targetAsistente?.nombreCompleto || 'Colaborador'} para el periodo ${mes} por un total de S/. ${(sueldo + bonos).toFixed(2)} (RMV: S/. ${sueldo.toFixed(2)}, Bonos: S/. ${bonos.toFixed(2)})`,
+      details: `Se liquidó la planilla de ${targetAsistente?.nombreCompleto || 'Colaborador'} para el periodo ${mes} por un total neto de S/. ${(sueldo + bonos - valAdelanto).toFixed(2)} (RMV: S/. ${sueldo.toFixed(2)}, Bonos: S/. ${bonos.toFixed(2)}, Adelanto: S/. ${valAdelanto.toFixed(2)})`,
       usuario: userDisplay,
       asistenteNombre: targetAsistente?.nombreCompleto || 'Colaborador',
       mes,
-      monto: sueldo + bonos
+      monto: sueldo + bonos - valAdelanto
     };
 
     const updatedAudits = [newAuditRecord, ...auditLogs];
@@ -836,6 +868,74 @@ export default function App() {
 
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, 'citas/batch-liquidate');
+      } finally {
+        setIsSyncing(false);
+      }
+    }
+  };
+
+  // Delete Liquidacion record and revert associated citations to CERRADO
+  const handleDeleteLiquidacion = async (liqId: string) => {
+    const liqToDelete = liquidaciones.find(l => l.id === liqId);
+    if (!liqToDelete) return;
+
+    // 1. Revert matching citas to CERRADO (so they aren't locked in LIQUIDADO)
+    const updatedCitas = citas.map(c => {
+      if (liqToDelete.citasLiquidadasIds.includes(c.id)) {
+        return {
+          ...c,
+          estadoCierre: EstadoCierre.CERRADO
+        };
+      }
+      return c;
+    });
+    saveAndSyncCitas(updatedCitas);
+
+    // 2. Remove liquidation
+    const updatedLiqs = liquidaciones.filter(l => l.id !== liqId);
+    saveAndSyncLiquidaciones(updatedLiqs);
+
+    // 3. Create Audit Log for deletion
+    const auditId = `audit-${Date.now()}`;
+    const userDisplay = auth.currentUser?.email || (userRole === 'admin' ? 'Oscar Russo (Admin)' : 'Asistente');
+    const newAuditRecord: AuditLog = {
+      id: auditId,
+      action: 'ENTREGA_RHE',
+      timestamp: new Date().toISOString(),
+      details: `Se ELIMINÓ la liquidación de ${liqToDelete.asistenteNombre} del periodo ${liqToDelete.mes} (S/. ${liqToDelete.montoTotal.toFixed(2)}). Citas asociadas reabiertas.`,
+      usuario: userDisplay,
+      asistenteNombre: liqToDelete.asistenteNombre,
+      mes: liqToDelete.mes,
+      monto: liqToDelete.montoTotal
+    };
+    saveAndSyncAuditLogs([newAuditRecord, ...auditLogs]);
+
+    // 4. Update in Firestore
+    if (auth.currentUser) {
+      try {
+        setIsSyncing(true);
+        const batch = writeBatch(db);
+
+        // Delete liquidation
+        const liqDocRef = doc(db, 'liquidaciones', liqId);
+        batch.delete(liqDocRef);
+
+        // Update each reverted cita
+        liqToDelete.citasLiquidadasIds.forEach(id => {
+          const matchingCita = updatedCitas.find(c => c.id === id);
+          if (matchingCita) {
+            const docRef = doc(db, 'citas', id);
+            batch.set(docRef, { ...matchingCita, ownerId: WORKSPACE_ID });
+          }
+        });
+
+        // Save audit log
+        const auditDocRef = doc(db, 'audit_logs', auditId);
+        batch.set(auditDocRef, { ...newAuditRecord, ownerId: WORKSPACE_ID });
+
+        await batch.commit();
+      } catch (err) {
+        handleFirestoreError(err, OperationType.DELETE, `liquidaciones/${liqId}`);
       } finally {
         setIsSyncing(false);
       }
@@ -1080,6 +1180,7 @@ export default function App() {
               auditLogs={auditLogs}
               onLiquidateAppointments={handleLiquidateCitas}
               onUpdateLiquidacion={handleUpdateLiquidacion}
+              onDeleteLiquidacion={handleDeleteLiquidacion}
               isSyncing={isSyncing}
             />
           )}
