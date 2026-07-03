@@ -58,6 +58,7 @@ export interface Cita {
   montoBono: number; // Monto del bono asignado por cierre
   notas?: string;
   fechaLlamada?: string; // YYYY-MM-DD (fecha de llamada del prospecto)
+  horaLlamada?: string;  // HH:MM (hora de llamada del prospecto)
   fechaNuevaLlamada?: string; // YYYY-MM-DD (fecha para reprogramar llamada)
   distritoPropiedad?: string; // distrito
 }

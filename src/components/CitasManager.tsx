@@ -107,6 +107,12 @@ export default function CitasManager({
 
   // New fields
   const [fechaLlamada, setFechaLlamada] = useState(getLocalDateString());
+  const [horaLlamada, setHoraLlamada] = useState(() => {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  });
   const [fechaNuevaLlamada, setFechaNuevaLlamada] = useState('');
   const [distritoPropiedad, setDistritoPropiedad] = useState('');
   const [showDistritos, setShowDistritos] = useState(false);
@@ -165,6 +171,12 @@ export default function CitasManager({
     setMontoBono(cita.montoBono);
     setNotas(cita.notas || '');
     setFechaLlamada(cita.fechaLlamada || getLocalDateString());
+    setHoraLlamada(cita.horaLlamada || (() => {
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${hh}:${mm}`;
+    })());
     setFechaNuevaLlamada(cita.fechaNuevaLlamada || '');
     setDistritoPropiedad(cita.distritoPropiedad || '');
     setErrorMsg('');
@@ -192,6 +204,12 @@ export default function CitasManager({
     setMontoBono(config.bonoVentaPredeterminado);
     setNotas('');
     setFechaLlamada(getLocalDateString());
+    setHoraLlamada(() => {
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${hh}:${mm}`;
+    });
     setFechaNuevaLlamada('');
     setDistritoPropiedad('');
     setErrorMsg('');
@@ -262,6 +280,7 @@ export default function CitasManager({
       montoBono: Number(montoBono),
       notas: notas.trim(),
       fechaLlamada: fechaLlamada.trim(),
+      horaLlamada: horaLlamada.trim(),
       fechaNuevaLlamada: finalEstadoCita === EstadoCita.REPROGRAMAR ? fechaNuevaLlamada : '',
       distritoPropiedad: distritoPropiedad.trim()
     };
@@ -461,23 +480,38 @@ export default function CitasManager({
               )}
             </div>
 
-            {/* 3. Fecha de Llamada (Immediately after Celular) */}
-            <div>
-              <label htmlFor="input_fecha_llamada" className="block text-[10px] uppercase font-bold text-slate-700 tracking-wider mb-1.5">
-                Fecha de Registro del Prospecto *
-              </label>
-              <input
-                type="date"
-                id="input_fecha_llamada"
-                value={fechaLlamada}
-                onChange={(e) => setFechaLlamada(e.target.value)}
-                disabled={true}
-                className="block w-full py-2 px-3 text-sm bg-slate-100 border border-slate-200 rounded-md text-slate-500 font-medium cursor-not-allowed"
-              />
-              <p className="text-[9px] text-slate-400 mt-0.5">
-                Informativo. Se coloca automáticamente con la fecha de registro del prospecto.
-              </p>
+            {/* 3. Fecha y Hora de Registro del Prospecto (Immediately after Celular) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="input_fecha_llamada" className="block text-[10px] uppercase font-bold text-slate-700 tracking-wider mb-1.5">
+                  Fecha de Registro *
+                </label>
+                <input
+                  type="date"
+                  id="input_fecha_llamada"
+                  value={fechaLlamada}
+                  onChange={(e) => setFechaLlamada(e.target.value)}
+                  disabled={true}
+                  className="block w-full py-2 px-3 text-sm bg-slate-100 border border-slate-200 rounded-md text-slate-500 font-medium cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label htmlFor="input_hora_llamada" className="block text-[10px] uppercase font-bold text-slate-700 tracking-wider mb-1.5">
+                  Hora de Registro *
+                </label>
+                <input
+                  type="time"
+                  id="input_hora_llamada"
+                  value={horaLlamada}
+                  onChange={(e) => setHoraLlamada(e.target.value)}
+                  disabled={true}
+                  className="block w-full py-2 px-3 text-sm bg-slate-100 border border-slate-200 rounded-md text-slate-500 font-medium cursor-not-allowed font-mono"
+                />
+              </div>
             </div>
+            <p className="text-[9px] text-slate-400 mt-0.5">
+              Informativo. Se coloca automáticamente con la fecha y hora de registro del prospecto.
+            </p>
 
             {/* 4. Nombre del Cliente / Propietario */}
             <div>
@@ -670,11 +704,10 @@ export default function CitasManager({
                   disabled={isCelularRepetido}
                   className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value={EstadoCita.PROSPECTO}>Prospecto</option>
-                  <option value={EstadoCita.REPROGRAMAR}>Reprogramar</option>
-                  <option value={EstadoCita.AGENDADA}>Agendada</option>
-                  <option value={EstadoCita.REALIZADA}>Exitosa</option>
-                  <option value={EstadoCita.CANCELADA}>Cancelada</option>
+                  <option value={EstadoCita.PROSPECTO}>Prospecto: Por contactar.</option>
+                  <option value={EstadoCita.REPROGRAMAR}>Reprogramar: Llamada pospuesta.</option>
+                  <option value={EstadoCita.AGENDADA}>Agendada: Cita confirmada.</option>
+                  <option value={EstadoCita.CANCELADA}>Cancelada: Descartado / No aplica.</option>
                 </select>
               </div>
 
@@ -705,9 +738,9 @@ export default function CitasManager({
                     disabled={userRole !== 'admin' || isCelularRepetido}
                     className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value={EstadoCierre.PENDIENTE}>Pendiente - la captación se logró pero el cierre aún</option>
-                    <option value={EstadoCierre.CERRADO}>Cerrado - se logró el cierre</option>
-                    <option value={EstadoCierre.LIQUIDADO}>Liquidado - pagado</option>
+                    <option value={EstadoCierre.PENDIENTE}>Pendiente: Captado, falta cierre.</option>
+                    <option value={EstadoCierre.CERRADO}>Cerrado: Cierre logrado.</option>
+                    <option value={EstadoCierre.LIQUIDADO}>Liquidado: Operación pagada.</option>
                   </select>
                   {userRole !== 'admin' && (
                     <p className="text-[8px] text-slate-400 mt-0.5">Control de Cierre exclusivo para Administradores.</p>
@@ -853,6 +886,8 @@ export default function CitasManager({
                 >
                   <option value="TODOS">Todos los estados de cierre</option>
                   <option value={EstadoCierre.PENDIENTE}>Pendiente - captación lograda pero cierre aún no</option>
+                  <option value={EstadoCierre.EN_SEGUIMIENTO}>En seguimiento - propiedad en promoción</option>
+                  <option value={EstadoCierre.DESCARTADO}>Descartado - cliente o propiedad descartada</option>
                   <option value={EstadoCierre.CERRADO}>Cerrado - se logró el cierre</option>
                   <option value={EstadoCierre.LIQUIDADO}>Liquidado - pagado</option>
                 </select>
@@ -951,7 +986,7 @@ export default function CitasManager({
                           {/* Date and hour */}
                           <td className="py-3.5 px-4 font-mono">
                             <div className="text-slate-500 text-[10px] flex items-center gap-0.5 mb-0.5">
-                              <span className="font-bold text-slate-600">Llamada:</span> {formatToDDMMYYYY(cita.fechaLlamada)}
+                              <span className="font-bold text-slate-600">Llamada:</span> {formatToDDMMYYYY(cita.fechaLlamada)} {cita.horaLlamada ? `(${cita.horaLlamada})` : ''}
                             </div>
                             {cita.estadoCita === EstadoCita.REPROGRAMAR && cita.fechaNuevaLlamada && (
                               <div className="text-amber-800 font-bold text-[10px] flex items-center gap-0.5 mb-0.5 bg-amber-100/70 p-0.5 px-1 rounded border border-amber-200">
