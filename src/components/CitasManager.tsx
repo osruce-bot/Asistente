@@ -254,9 +254,7 @@ export default function CitasManager({
       return;
     }
 
-    const finalEstadoCita = userRole === 'admin' 
-      ? estadoCita 
-      : (editingId ? (citas.find(c => c.id === editingId)?.estadoCita || EstadoCita.PROSPECTO) : EstadoCita.PROSPECTO);
+    const finalEstadoCita = estadoCita;
 
     if (finalEstadoCita === EstadoCita.REPROGRAMAR && !fechaNuevaLlamada) {
       setErrorMsg('Por favor seleccione la fecha de la nueva llamada para reprogramar.');
@@ -815,7 +813,7 @@ export default function CitasManager({
               id="submit_cita_btn"
             >
               <PlusCircle className="w-4 h-4" />
-              {editingId ? 'Guardar Cambios' : 'Registrar Prospecto'}
+              Guardar
             </button>
           </form>
         </div>
