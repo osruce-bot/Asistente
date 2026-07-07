@@ -273,7 +273,9 @@ export default function CitasManager({
       tipoPropiedad,
       tipoOperacion,
       estadoCita: finalEstadoCita,
-      estadoCierre: userRole === 'admin' ? estadoCierre : EstadoCierre.PENDIENTE,
+      estadoCierre: userRole === 'admin' 
+        ? estadoCierre 
+        : (editingId ? (citas.find(c => c.id === editingId)?.estadoCierre || EstadoCierre.PENDIENTE) : EstadoCierre.PENDIENTE),
       fechaCierre: (estadoCierre === EstadoCierre.CERRADO || estadoCierre === EstadoCierre.LIQUIDADO) ? (fechaCierre || new Date().toISOString().split('T')[0]) : '',
       montoBono: Number(montoBono),
       notas: notas.trim(),
