@@ -1080,7 +1080,22 @@ export default function App() {
                   </button>
                 )}
 
-                {/* 3. Appointments Manager Tab */}
+                {/* 3. Appointments Manager Tab (Nuevo Registro) */}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('registrar')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
+                    activeTab === 'registrar'
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-transparent'
+                  }`}
+                  id="tab_registrar_btn"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  Nuevo Registro
+                </button>
+
+                {/* 4. Appointments Manager Tab (Prospectos) */}
                 <button
                   type="button"
                   onClick={() => setActiveTab('citas')}
@@ -1158,7 +1173,7 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'citas' && (
+          {(activeTab === 'citas' || activeTab === 'registrar') && (
             <CitasManager 
               citas={citas}
               asistentes={asistentes}
@@ -1168,6 +1183,8 @@ export default function App() {
               isSyncing={isSyncing}
               userRole={userRole}
               onSaveAsistente={handleSaveAsistente}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
             />
           )}
 

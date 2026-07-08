@@ -77,6 +77,8 @@ interface CitasManagerProps {
   isSyncing: boolean;
   userRole?: 'admin' | 'asistente' | null;
   onSaveAsistente?: (asistente: Asistente) => void;
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
 }
 
 export default function CitasManager({
@@ -87,7 +89,9 @@ export default function CitasManager({
   onDeleteCita,
   isSyncing,
   userRole = 'admin',
-  onSaveAsistente
+  onSaveAsistente,
+  activeTab = 'citas',
+  setActiveTab
 }: CitasManagerProps) {
   // Local state for the appointment form
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -181,11 +185,18 @@ export default function CitasManager({
     setDistritoPropiedad(cita.distritoPropiedad || '');
     setErrorMsg('');
     setSuccessMsg('');
-    // Scroll to form on mobile/desktop
-    const formElement = document.getElementById('cita_form_container');
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: 'smooth' });
+
+    if (setActiveTab) {
+      setActiveTab('registrar');
     }
+
+    // Scroll to form on mobile/desktop
+    setTimeout(() => {
+      const formElement = document.getElementById('cita_form_container');
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   const resetForm = () => {
@@ -247,6 +258,10 @@ export default function CitasManager({
       setErrorMsg('Por favor seleccione o escriba el distrito de la propiedad.');
       return;
     }
+    if (!notas) {
+      setErrorMsg('Por favor seleccione un motivo / detalle de seguimiento.');
+      return;
+    }
 
     const selectedAsistente = asistentes.find(as => as.id === asistenteId);
     if (!selectedAsistente) {
@@ -288,6 +303,12 @@ export default function CitasManager({
     onSaveCita(compiledCita);
     setSuccessMsg(editingId ? 'Prospecto actualizado correctamente.' : 'Nuevo prospecto registrado con éxito.');
     resetForm();
+
+    if (setActiveTab) {
+      setTimeout(() => {
+        setActiveTab('citas');
+      }, 1500);
+    }
 
     setTimeout(() => {
       setSuccessMsg('');
@@ -400,11 +421,9 @@ export default function CitasManager({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column: Form and Calls */}
-        <div className="lg:col-span-1 space-y-6">
-          
+      {activeTab === 'registrar' ? (
+        /* Left Column / Registration Form - Made full-width and centered for an elegant single-view */
+        <div className="max-w-2xl mx-auto w-full space-y-6">
           {/* Create/Edit Appointment */}
           <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden h-fit" id="cita_form_container">
           <div className="p-4 bg-navy border-b border-navy/20 flex justify-between items-center text-white">
@@ -792,20 +811,28 @@ export default function CitasManager({
               )}
             </div>
 
-            {/* Observations / Notes */}
+            {/* Observations / Notes as dropdown select */}
             <div>
-              <label htmlFor="textarea_notas" className="block text-[10px] uppercase font-bold text-slate-700 tracking-wider mb-1.5">
-                Observaciones / Detalles de Seguimiento
+              <label htmlFor="select_notas" className="block text-[10px] uppercase font-bold text-slate-700 tracking-wider mb-1.5">
+                Motivo / Detalle de Seguimiento *
               </label>
-              <textarea
-                id="textarea_notas"
-                rows={3}
-                placeholder="Indicar detalles de la captación o el progreso..."
+              <select
+                id="select_notas"
                 value={notas}
                 onChange={(e) => setNotas(e.target.value)}
                 disabled={isCelularRepetido}
-                className="block w-full py-2 px-3 text-xs bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
+                className="block w-full py-2.5 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              >
+                <option value="">-- Seleccionar Motivo --</option>
+                <option value="Agente Inmobiliario">Agente Inmobiliario</option>
+                <option value="Malas experiencias">Malas experiencias</option>
+                <option value="No contesta / Reagendar">No contesta / Reagendar</option>
+                <option value="No desea exclusividad">No desea exclusividad</option>
+                <option value="Solo trato directo">Solo trato directo</option>
+                <option value="Tiene exclusiva (otra agencia)">Tiene exclusiva (otra agencia)</option>
+                <option value="Trabaja en abierto (multiagente)">Trabaja en abierto (multiagente)</option>
+                <option value="Ya vendido / Alquilado">Ya vendido / Alquilado</option>
+              </select>
             </div>
 
             <button
@@ -820,9 +847,9 @@ export default function CitasManager({
           </form>
         </div>
       </div>
-
-      {/* Right Section: Interactive List & Filtering */}
-      <div className="lg:col-span-2 space-y-4">
+      ) : (
+        /* Right Section: Interactive List & Filtering - Now taking full width */
+        <div className="w-full space-y-4">
           
           {/* Filter Bar Panel */}
           <div className="bg-white p-4 rounded-md border border-slate-200 shadow-sm" id="filters_panel">
@@ -923,6 +950,7 @@ export default function CitasManager({
                       <th className="py-3 px-4">Llamada / Cita</th>
                       <th className="py-3 px-4">Cliente / Contacto</th>
                       <th className="py-3 px-4">Dirección / Distrito</th>
+                      <th className="py-3 px-4">Motivo</th>
                       <th className="py-3 px-4">Estado Cita</th>
                       <th className="py-3 px-4">Bono / Cierre</th>
                       <th className="py-3 px-4 text-right">Acciones</th>
@@ -1039,6 +1067,17 @@ export default function CitasManager({
                             </div>
                           </td>
 
+                          {/* Motivo / Detalle */}
+                          <td className="py-3.5 px-4">
+                            {cita.notas ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-medium border border-slate-200">
+                                {cita.notas}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 italic text-[10px]">Sin especificar</span>
+                            )}
+                          </td>
+
                           {/* Cita Status */}
                           <td className="py-3.5 px-4">
                             <span className={`inline-flex px-2 py-0.5 rounded text-[10px] uppercase tracking-wide font-bold ${getCitaBadge(cita.estadoCita)}`}>
@@ -1119,7 +1158,7 @@ export default function CitasManager({
           </div>
 
         </div>
-      </div>
+      )}
     </div>
   );
 }

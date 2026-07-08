@@ -19,7 +19,8 @@ import {
   Tag,
   Phone,
   HelpCircle,
-  Award
+  Award,
+  BarChart3
 } from 'lucide-react';
 import { Asistente, Cita, EstadoCita, EstadoCierre, ConfigGeneral } from '../types';
 import { formatPEN } from '../utils/currency';
@@ -95,6 +96,35 @@ export default function Dashboard({
 
   const promedioLlamadasPorCita = totalCitas > 0 ? (totalLlamadas / totalCitas).toFixed(1) : '0';
   const promedioLlamadasPorCierre = cierresConcretados > 0 ? (totalLlamadas / cierresConcretados).toFixed(1) : '0';
+
+  // Analizar motivos de seguimiento
+  const citasConMotivo = filterMonth
+    ? citas.filter(c => {
+        const dateStr = c.fechaCita || c.fechaLlamada || '';
+        return dateStr.startsWith(filterMonth);
+      })
+    : citas;
+
+  const totalConMotivo = citasConMotivo.filter(c => !!c.notas).length;
+
+  const motivosList = [
+    "Agente Inmobiliario",
+    "Malas experiencias",
+    "No contesta / Reagendar",
+    "No desea exclusividad",
+    "Solo trato directo",
+    "Tiene exclusiva (otra agencia)",
+    "Trabaja en abierto (multiagente)",
+    "Ya vendido / Alquilado"
+  ];
+
+  const motivosStats = motivosList.map(motivo => {
+    const count = citasConMotivo.filter(c => c.notas === motivo).length;
+    const percentage = totalLlamadas > 0 ? Number(((count / totalLlamadas) * 100).toFixed(1)) : 0;
+    return { motivo, count, percentage };
+  }).sort((a, b) => b.count - a.count);
+
+  const topMotivo = motivosStats.find(m => m.count > 0) || null;
 
 
   return (
@@ -491,6 +521,96 @@ export default function Dashboard({
             </div>
 
           </div>
+
+          {/* Motives Analytics KPI Panel */}
+          <div className="bg-white p-5 rounded-md border border-slate-200 shadow-sm space-y-5" id="motivos_analytics">
+            {/* Title Block */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div className="space-y-0.5">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4 text-primary" />
+                  Métricas de Motivos y Detalles de Seguimiento
+                </h3>
+                <p className="text-[10px] text-slate-500">
+                  Porcentaje de cada caso frente al total de llamadas ({totalLlamadas} llamadas totales, de las cuales {totalConMotivo} tienen motivo asignado).
+                </p>
+              </div>
+              <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-bold uppercase">
+                {filterMonth ? `Mes: ${formatToDDMMYYYY(filterMonth)}` : "Historial Completo"}
+              </span>
+            </div>
+
+            {/* Top Motive KPI Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-1 bg-slate-50 border border-slate-150 p-4 rounded flex flex-col justify-between">
+                <div className="space-y-1">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider block">Motivo Más Frecuente</span>
+                  <span className="text-xs font-bold text-slate-800 block leading-tight">
+                    {topMotivo ? topMotivo.motivo : 'Ninguno registrado'}
+                  </span>
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-200/50">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-mono font-bold text-primary">
+                      {topMotivo ? topMotivo.count : 0}
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      veces ({topMotivo ? topMotivo.percentage : 0}%)
+                    </span>
+                  </div>
+                  <span className="text-[9px] text-slate-400 block mt-1">Impacto principal en captación</span>
+                </div>
+              </div>
+
+              {/* Progress bars list for motives */}
+              <div className="md:col-span-2 space-y-3">
+                <h4 className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Desglose de Objeciones / Estados</h4>
+                
+                <div className="space-y-2">
+                  {motivosStats.map((stat, idx) => {
+                    const barColors = [
+                      'bg-indigo-500', 
+                      'bg-blue-500',   
+                      'bg-amber-500',  
+                      'bg-sky-500',    
+                      'bg-slate-500',  
+                      'bg-rose-400',   
+                      'bg-emerald-500' 
+                    ];
+                    const colorClass = barColors[idx % barColors.length];
+                    
+                    return (
+                      <div key={stat.motivo} className="space-y-1">
+                        <div className="flex justify-between items-center text-[11px] font-medium">
+                          <span className="text-slate-700 truncate max-w-[200px] md:max-w-xs">{stat.motivo}</span>
+                          <span className="text-slate-500 font-mono text-[10px]">
+                            <strong>{stat.count}</strong> ({stat.percentage}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div 
+                            className={`${colorClass} h-full rounded-full transition-all duration-500`} 
+                            style={{ width: `${stat.percentage}%` }} 
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Strategic interpretation */}
+            <div className="p-3 bg-blue-50/50 border border-blue-100 rounded text-[11px] text-slate-600 flex items-start gap-2">
+              <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="leading-relaxed">
+                  <strong>Estrategia Comercial REMAX Power Expo:</strong> Analizar los motivos de descarte permite a la asistente de Oscar Russo ajustar su guión de llamadas. Por ejemplo, ante un alto volumen de <em>"Solo trato directo"</em>, se deben reforzar los beneficios de exclusividad legal y el alcance publicitario de REMAX en Lima.
+                </p>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* Right column: strategic advice and policies */}
