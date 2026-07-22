@@ -97,6 +97,8 @@ export interface LiquidacionMensual {
   reciboHonorariosEntregado?: boolean;
   montoAdelantoQuincena?: number;
   reciboAdelantoEntregado?: boolean;
+  fechaPagoAdelanto?: string;
+  estadoAdelanto?: 'PENDIENTE' | 'PAGADO';
 }
 
 export interface AuditLog {

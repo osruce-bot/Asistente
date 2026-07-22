@@ -216,19 +216,56 @@ export default function ReportesLiquidacion({
     }
   }, [receiptAsistente, liquidaciones, preLiquidationAdvances, preLiquidationRecibos, selectedMonth, citas]);
 
-  // Handle Action: Process Payment / Liquidate for a specific assistant
-  const handleLiquidate = (as: Asistente, closedCitas: Cita[], sueldo: number, bonos: number) => {
-    if (closedCitas.length === 0) {
-      setNotification({
-        message: 'No hay bonos cerrados pendientes de liquidar para este colaborador en el mes seleccionado.',
-        type: 'error'
-      });
-      setTimeout(() => setNotification(null), 4000);
-      return;
+  // Save or Update Adelanto de Quincena explicitly
+  const handleSaveAdelanto = (asistente: Asistente, monto: number, reciboEntregado: boolean) => {
+    const existingLiq = liquidaciones.find(l => l.asistenteId === asistente.id && l.mes === selectedMonth);
+    const liqId = existingLiq?.id || `liq-${asistente.id}-${selectedMonth}`;
+
+    const newLiq: LiquidacionMensual = {
+      id: liqId,
+      asistenteId: asistente.id,
+      asistenteNombre: asistente.nombreCompleto,
+      mes: selectedMonth,
+      sueldoBasico: asistente.sueldoBasico,
+      totalBonos: existingLiq?.totalBonos || 0,
+      montoAdelantoQuincena: monto,
+      reciboAdelantoEntregado: reciboEntregado,
+      fechaPagoAdelanto: existingLiq?.fechaPagoAdelanto || new Date().toISOString().split('T')[0],
+      estadoAdelanto: monto > 0 ? 'PAGADO' : 'PENDIENTE',
+      montoTotal: (existingLiq?.sueldoBasico || asistente.sueldoBasico) + (existingLiq?.totalBonos || 0) - monto,
+      fechaPago: existingLiq?.fechaPago || new Date().toISOString().split('T')[0],
+      estado: existingLiq?.estado || 'PENDIENTE',
+      citasLiquidadasIds: existingLiq?.citasLiquidadasIds || [],
+      banco: existingLiq?.banco || asistente.banco || '--',
+      numeroCuenta: existingLiq?.numeroCuenta || asistente.numeroCuenta || '--',
+      cci: existingLiq?.cci || asistente.cci || '--',
+      reciboHonorariosEntregado: existingLiq?.reciboHonorariosEntregado || false
+    };
+
+    if (onUpdateLiquidacion) {
+      onUpdateLiquidacion(newLiq);
     }
 
-    const initialAdelanto = preLiquidationAdvances[as.id] || 0;
-    const initialRecibo = !!preLiquidationRecibos[as.id];
+    setPreLiquidationAdvances(prev => ({ ...prev, [asistente.id]: monto }));
+    setPreLiquidationRecibos(prev => ({ ...prev, [asistente.id]: reciboEntregado }));
+
+    setNotification({
+      message: `Adelanto de quincena por ${formatPEN(monto)} registrado y guardado para ${asistente.nombreCompleto}.`,
+      type: 'success'
+    });
+    setTimeout(() => setNotification(null), 3500);
+  };
+
+  // Handle Action: Process Payment / Liquidate for a specific assistant
+  const handleLiquidate = (as: Asistente, closedCitas: Cita[], sueldo: number, bonos: number) => {
+    const existingLiq = liquidaciones.find(l => l.asistenteId === as.id && l.mes === selectedMonth);
+    const initialAdelanto = existingLiq?.montoAdelantoQuincena !== undefined 
+      ? existingLiq.montoAdelantoQuincena 
+      : (preLiquidationAdvances[as.id] || 0);
+    const initialRecibo = existingLiq?.reciboAdelantoEntregado !== undefined 
+      ? !!existingLiq.reciboAdelantoEntregado 
+      : !!preLiquidationRecibos[as.id];
+
     setLiqMontoAdelanto(initialAdelanto);
     setLiqReciboAdelanto(initialRecibo);
     setConfirmLiquidation({
@@ -448,40 +485,55 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                           <span className="text-[8px] text-slate-400 block font-sans">({closedCitas.length} citas cerradas)</span>
                         </div>
 
-                        {/* Adelanto en Quincena - Interactive Input */}
-                        <div className="space-y-1">
-                          <span className="text-[9px] uppercase font-bold text-amber-600 block">Adelanto Quincena</span>
+                        {/* Adelanto en Quincena - Interactive Input & Guardar */}
+                        <div className="space-y-1 bg-amber-50/80 p-2 rounded border border-amber-200/80">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] uppercase font-bold text-amber-800 block">Adelanto Quincena</span>
+                            {existingLiq?.montoAdelantoQuincena && existingLiq.montoAdelantoQuincena > 0 ? (
+                              <span className="text-[8px] font-bold text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded border border-emerald-300">
+                                ✓ Registrado
+                              </span>
+                            ) : null}
+                          </div>
+
                           <div className="flex items-center gap-1">
-                            <span className="text-xs font-mono font-bold text-amber-600">-</span>
+                            <span className="text-xs font-mono font-bold text-amber-700">-</span>
                             <input
                               type="number"
                               min="0"
                               step="0.01"
-                              className="w-full max-w-[90px] px-1.5 py-0.5 border border-amber-200 bg-amber-50/50 rounded text-xs font-mono font-bold text-amber-700 focus:ring-1 focus:ring-amber-500 focus:outline-none"
-                              placeholder="S/. 0.00"
+                              className="w-full max-w-[85px] px-1.5 py-0.5 border border-amber-300 bg-white rounded text-xs font-mono font-bold text-amber-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                              placeholder="0.00"
                               value={registeredAdelanto || ''}
                               onChange={(e) => {
                                 const val = Math.max(0, parseFloat(e.target.value) || 0);
-                                if (existingLiq) {
-                                  if (onUpdateLiquidacion) {
-                                    onUpdateLiquidacion({
-                                      ...existingLiq,
-                                      montoAdelantoQuincena: val,
-                                      montoTotal: existingLiq.sueldoBasico + existingLiq.totalBonos - val
-                                    });
-                                  }
-                                } else {
-                                  setPreLiquidationAdvances(prev => ({
-                                    ...prev,
-                                    [asistente.id]: val
-                                  }));
-                                }
+                                setPreLiquidationAdvances(prev => ({
+                                  ...prev,
+                                  [asistente.id]: val
+                                }));
                               }}
                             />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const val = preLiquidationAdvances[asistente.id] !== undefined 
+                                  ? preLiquidationAdvances[asistente.id] 
+                                  : (existingLiq?.montoAdelantoQuincena || 0);
+                                const recibo = preLiquidationRecibos[asistente.id] !== undefined
+                                  ? preLiquidationRecibos[asistente.id]
+                                  : !!existingLiq?.reciboAdelantoEntregado;
+                                handleSaveAdelanto(asistente, val, recibo);
+                              }}
+                              className="px-2 py-0.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-0.5 cursor-pointer shadow-xs shrink-0"
+                              title="Guardar adelanto de quincena en el sistema"
+                            >
+                              <Save className="w-2.5 h-2.5" />
+                              Guardar
+                            </button>
                           </div>
                           
                           {/* RHe Checkbox */}
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 pt-0.5">
                             <input
                               type="checkbox"
                               id={`rhe_checkbox_${asistente.id}`}
@@ -489,23 +541,18 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                               checked={reciboAdelantoEntregado}
                               onChange={(e) => {
                                 const checked = e.target.checked;
-                                if (existingLiq) {
-                                  if (onUpdateLiquidacion) {
-                                    onUpdateLiquidacion({
-                                      ...existingLiq,
-                                      reciboAdelantoEntregado: checked
-                                    });
-                                  }
-                                } else {
-                                  setPreLiquidationRecibos(prev => ({
-                                    ...prev,
-                                    [asistente.id]: checked
-                                  }));
-                                }
+                                setPreLiquidationRecibos(prev => ({
+                                  ...prev,
+                                  [asistente.id]: checked
+                                }));
+                                const val = preLiquidationAdvances[asistente.id] !== undefined 
+                                  ? preLiquidationAdvances[asistente.id] 
+                                  : (existingLiq?.montoAdelantoQuincena || 0);
+                                handleSaveAdelanto(asistente, val, checked);
                               }}
                             />
-                            <label htmlFor={`rhe_checkbox_${asistente.id}`} className="text-[8px] text-slate-500 font-medium cursor-pointer select-none whitespace-nowrap">
-                              RHe Recibido
+                            <label htmlFor={`rhe_checkbox_${asistente.id}`} className="text-[8px] text-slate-600 font-medium cursor-pointer select-none whitespace-nowrap">
+                              RHe Quincena
                             </label>
                           </div>
                         </div>
@@ -515,7 +562,11 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                           <span className="text-[9px] uppercase font-bold text-slate-800 block">Neto a Transferir</span>
                           <span className="text-xs font-mono font-bold text-slate-900">{formatPEN(netoFinal)}</span>
                           <span className="text-[8px] text-slate-400 block font-sans">
-                            {existingLiq ? '✅ Liquidado' : (hasPendingBonos ? '⚠️ Pendiente cierre' : '✓ Planilla lista')}
+                            {existingLiq?.estado === 'PAGADO' 
+                              ? '✅ Liquidado' 
+                              : (existingLiq?.montoAdelantoQuincena && existingLiq.montoAdelantoQuincena > 0 
+                                  ? '✓ Adelanto Pagado' 
+                                  : (hasPendingBonos ? '⚠️ Pendiente cierre' : '✓ Planilla lista'))}
                           </span>
                         </div>
                       </div>
@@ -535,15 +586,15 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                             Ver Boleta de Pago
                           </button>
 
-                          {hasPendingBonos && (
-                            <button
-                              onClick={() => handleLiquidate(asistente, closedCitas, sueldoBasico, pendingBonosAmount)}
-                              className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-primary hover:bg-primary/95 rounded transition-all cursor-pointer shadow-sm flex items-center gap-1"
-                            >
-                              <CheckCircle2 className="w-3 h-3" />
-                              Liquidar S/. {pendingBonosAmount.toFixed(2)}
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleLiquidate(asistente, closedCitas, sueldoBasico, pendingBonosAmount)}
+                            className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-primary hover:bg-primary/95 rounded transition-all cursor-pointer shadow-sm flex items-center gap-1"
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            {existingLiq?.estado === 'PAGADO'
+                              ? 'Re-Liquidar Fin de Mes'
+                              : (hasPendingBonos ? `Liquidar S/. ${pendingBonosAmount.toFixed(2)}` : 'Liquidar Pago Fin de Mes')}
+                          </button>
                         </div>
                       </div>
                     </div>

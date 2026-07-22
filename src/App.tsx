@@ -589,7 +589,11 @@ export default function App() {
 
   const handleUpdateLiquidacion = async (liq: LiquidacionMensual) => {
     const originalLiq = liquidaciones.find(item => item.id === liq.id);
-    const updated = liquidaciones.map(item => item.id === liq.id ? liq : item);
+    const exists = !!originalLiq;
+    const updated = exists 
+      ? liquidaciones.map(item => item.id === liq.id ? liq : item)
+      : [liq, ...liquidaciones];
+
     saveAndSyncLiquidaciones(updated);
 
     let newAuditRecord: AuditLog | null = null;
@@ -622,11 +626,35 @@ export default function App() {
           mes: liq.mes,
           monto: liq.montoAdelantoQuincena || 0
         };
+      } else if (originalLiq.montoAdelantoQuincena !== liq.montoAdelantoQuincena) {
+        const auditId = `audit-${Date.now()}`;
+        newAuditRecord = {
+          id: auditId,
+          action: 'LIQUIDAR_CITAS',
+          timestamp: new Date().toISOString(),
+          details: `Se actualizó el adelanto de quincena a S/. ${(liq.montoAdelantoQuincena || 0).toFixed(2)} para ${liq.asistenteNombre} - Periodo ${liq.mes}`,
+          usuario: userDisplay,
+          asistenteNombre: liq.asistenteNombre,
+          mes: liq.mes,
+          monto: liq.montoAdelantoQuincena || 0
+        };
       }
+    } else if (liq.montoAdelantoQuincena && liq.montoAdelantoQuincena > 0) {
+      const auditId = `audit-${Date.now()}`;
+      newAuditRecord = {
+        id: auditId,
+        action: 'LIQUIDAR_CITAS',
+        timestamp: new Date().toISOString(),
+        details: `Se registró el pago de adelanto de quincena por S/. ${liq.montoAdelantoQuincena.toFixed(2)} para ${liq.asistenteNombre} - Periodo ${liq.mes}`,
+        usuario: userDisplay,
+        asistenteNombre: liq.asistenteNombre,
+        mes: liq.mes,
+        monto: liq.montoAdelantoQuincena
+      };
+    }
 
-      if (newAuditRecord) {
-        saveAndSyncAuditLogs([newAuditRecord, ...auditLogs]);
-      }
+    if (newAuditRecord) {
+      saveAndSyncAuditLogs([newAuditRecord, ...auditLogs]);
     }
 
     if (auth.currentUser) {
