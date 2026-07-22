@@ -464,29 +464,29 @@ export default function CalendarView({ citas, asistentes }: CalendarViewProps) {
                       setCurrentDate(cell.dateObj);
                       setScale('dia');
                     }}
-                    className={`min-h-[120px] p-2 transition-all flex flex-col justify-between group ${
+                    className={`min-h-[110px] sm:min-h-[120px] p-1.5 transition-all flex flex-col justify-start gap-1 group ${
                       cell.isCurrentMonth ? 'bg-white' : 'bg-[#fcfcfd] text-slate-300'
                     } ${cell.isToday ? 'bg-[#007AFF]/5' : ''} hover:bg-slate-50/80 cursor-pointer`}
                   >
                     {/* Cell Top Bar */}
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center justify-between mb-0.5 shrink-0">
                       <span className={`text-xs font-semibold font-mono tracking-tight ${
                         cell.isToday 
-                          ? 'bg-[#FF3B30] text-white w-6 h-6 rounded-full flex items-center justify-center font-bold shadow-xs' 
+                          ? 'bg-[#FF3B30] text-white w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center font-bold shadow-xs' 
                           : cell.isCurrentMonth ? 'text-slate-800' : 'text-slate-300'
                       }`}>
                         {cell.dayNumber}
                       </span>
 
                       {dayEvents.length > 0 && (
-                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded-full border border-slate-200">
+                        <span className="text-[9.5px] font-mono font-bold px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded-full border border-slate-200">
                           {dayEvents.length}
                         </span>
                       )}
                     </div>
 
                     {/* Events Pills */}
-                    <div className="space-y-1 overflow-y-auto max-h-[140px] no-scrollbar flex-1">
+                    <div className="space-y-1 overflow-y-auto flex-1 w-full no-scrollbar">
                       {dayEvents.map((evt) => {
                         const isCita = evt.eventType === 'cita';
 
