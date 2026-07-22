@@ -22,7 +22,10 @@ import {
   Coins,
   CheckCircle2,
   XCircle,
-  Info
+  Info,
+  Eye,
+  X,
+  ExternalLink
 } from 'lucide-react';
 import { Asistente, Cita, EstadoCita, EstadoCierre, TipoOperacionCita, ConfigGeneral } from '../types';
 import { formatPEN } from '../utils/currency';
@@ -67,6 +70,40 @@ const DISTRITOS_LIMA_CALLAO_PROVINCIAS = Array.from(new Set([
   // Cajatambo
   "Cajatambo", "Copa", "Gorgor", "Huancapón", "Manás"
 ])).sort((a, b) => a.localeCompare(b));
+
+const getCitaBadge = (status: EstadoCita) => {
+  switch (status) {
+    case EstadoCita.PROSPECTO:
+      return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+    case EstadoCita.REPROGRAMAR:
+      return 'bg-amber-100 text-amber-800 border border-amber-300 font-bold';
+    case EstadoCita.AGENDADA:
+      return 'bg-blue-50 text-primary border border-primary/20';
+    case EstadoCita.REALIZADA:
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+    case EstadoCita.CANCELADA:
+      return 'bg-red-50 text-brand-red border border-brand-red/10';
+    default:
+      return 'bg-slate-50 text-slate-500';
+  }
+};
+
+const getCierreBadge = (status: EstadoCierre) => {
+  switch (status) {
+    case EstadoCierre.PENDIENTE:
+      return 'bg-slate-100 text-slate-600 border border-slate-200';
+    case EstadoCierre.EN_SEGUIMIENTO:
+      return 'bg-amber-50 text-amber-800 border border-amber-200';
+    case EstadoCierre.DESCARTADO:
+      return 'bg-red-50 text-brand-red border border-brand-red/10';
+    case EstadoCierre.CERRADO:
+      return 'bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold';
+    case EstadoCierre.LIQUIDADO:
+      return 'bg-navy text-white border border-navy/30 font-bold';
+    default:
+      return 'bg-slate-100 text-slate-500';
+  }
+};
 
 interface CitasManagerProps {
   citas: Cita[];
@@ -146,6 +183,7 @@ export default function CitasManager({
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [viewingCita, setViewingCita] = useState<Cita | null>(null);
 
   // Auto-adjust default bonus when operation type changes
   const handleOperationTypeChange = (type: TipoOperacionCita) => {
@@ -256,10 +294,6 @@ export default function CitasManager({
     }
     if (!distritoPropiedad.trim()) {
       setErrorMsg('Por favor seleccione o escriba el distrito de la propiedad.');
-      return;
-    }
-    if (!notas) {
-      setErrorMsg('Por favor seleccione un motivo / detalle de seguimiento.');
       return;
     }
 
@@ -814,7 +848,7 @@ export default function CitasManager({
             {/* Observations / Notes as dropdown select */}
             <div>
               <label htmlFor="select_notas" className="block text-[10px] uppercase font-bold text-slate-700 tracking-wider mb-1.5">
-                Motivo / Detalle de Seguimiento *
+                Motivo / Detalle de Seguimiento (Opcional)
               </label>
               <select
                 id="select_notas"
@@ -958,41 +992,6 @@ export default function CitasManager({
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                     {sortedCitas.map((cita) => {
-                      // Status colors helper
-                      const getCitaBadge = (status: EstadoCita) => {
-                        switch (status) {
-                          case EstadoCita.PROSPECTO:
-                            return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
-                          case EstadoCita.REPROGRAMAR:
-                            return 'bg-amber-100 text-amber-800 border border-amber-300 font-bold';
-                          case EstadoCita.AGENDADA:
-                            return 'bg-blue-50 text-primary border border-primary/20';
-                          case EstadoCita.REALIZADA:
-                            return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-                          case EstadoCita.CANCELADA:
-                            return 'bg-red-50 text-brand-red border border-brand-red/10';
-                          default:
-                            return 'bg-slate-50 text-slate-500';
-                        }
-                      };
-
-                      const getCierreBadge = (status: EstadoCierre) => {
-                        switch (status) {
-                          case EstadoCierre.PENDIENTE:
-                            return 'bg-slate-100 text-slate-600 border border-slate-200';
-                          case EstadoCierre.EN_SEGUIMIENTO:
-                            return 'bg-amber-50 text-amber-800 border border-amber-200';
-                          case EstadoCierre.DESCARTADO:
-                            return 'bg-red-50 text-brand-red border border-brand-red/10';
-                          case EstadoCierre.CERRADO:
-                            return 'bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold';
-                          case EstadoCierre.LIQUIDADO:
-                            return 'bg-navy text-white border border-navy/30 font-bold';
-                          default:
-                            return 'bg-slate-100 text-slate-500';
-                        }
-                      };
-
                       const alertActive = isReprogramadaAlert(cita);
 
                       return (
@@ -1101,6 +1100,14 @@ export default function CitasManager({
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
+                                onClick={() => setViewingCita(cita)}
+                                className="p-1 px-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-md transition-colors cursor-pointer"
+                                title="Ver detalles del registro"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
                                 onClick={() => handleEdit(cita)}
                                 className="p-1 px-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-primary rounded-md transition-colors cursor-pointer"
                                 title="Editar cita"
@@ -1157,6 +1164,198 @@ export default function CitasManager({
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* Modal Visor de Detalles del Registro (Solo Lectura) */}
+      {viewingCita && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="bg-navy p-4 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-white/10 rounded-md">
+                  <Eye className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm tracking-wide text-white">Detalles del Prospecto / Registro</h3>
+                  <p className="text-[11px] text-slate-300">Vista de solo lectura del historial registrado</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingCita(null)}
+                className="p-1.5 hover:bg-white/10 rounded-md text-slate-300 hover:text-white transition-colors cursor-pointer"
+                title="Cerrar visor"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body - Scrollable */}
+            <div className="p-5 space-y-5 overflow-y-auto text-xs text-slate-700">
+              
+              {/* Status Highlights */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-md border border-slate-200">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Estado de Cita</span>
+                  <span className={`inline-flex px-2 py-0.5 rounded text-[10px] uppercase tracking-wide font-bold ${getCitaBadge(viewingCita.estadoCita)}`}>
+                    {viewingCita.estadoCita === EstadoCita.PROSPECTO ? 'Prospecto' : viewingCita.estadoCita === EstadoCita.REPROGRAMAR ? 'Reprogramar' : viewingCita.estadoCita === EstadoCita.REALIZADA ? 'Exitosa' : viewingCita.estadoCita === EstadoCita.AGENDADA ? 'Agendada' : 'Cancelada'}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Estado de Cierre</span>
+                  <span className={`inline-flex px-2 py-0.5 rounded text-[10px] uppercase tracking-wide font-bold ${getCierreBadge(viewingCita.estadoCierre)}`}>
+                    {viewingCita.estadoCierre === EstadoCierre.PENDIENTE ? 'Pendiente' : viewingCita.estadoCierre === EstadoCierre.CERRADO ? 'Cerrado' : viewingCita.estadoCierre === EstadoCierre.LIQUIDADO ? 'Liquidado' : viewingCita.estadoCierre}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Bono Estimado</span>
+                  <span className="font-mono font-bold text-primary text-sm block">
+                    {formatPEN(viewingCita.montoBono)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Section 1: Cliente & Asistente */}
+              <div className="space-y-2">
+                <h4 className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                  <User className="w-3.5 h-3.5 text-primary" />
+                  Cliente & Gestión
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white p-3 rounded-md border border-slate-200">
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-500 block">Nombre del Cliente</span>
+                    <span className="text-sm font-bold text-slate-800 block">{viewingCita.clienteNombre || 'No registrado'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-500 block">Celular de Contacto</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-sm font-bold font-mono text-slate-800">{viewingCita.clienteCelular || 'Sin teléfono'}</span>
+                      {viewingCita.clienteCelular && (
+                        <a
+                          href={`https://wa.me/51${viewingCita.clienteCelular.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition-colors"
+                        >
+                          WhatsApp
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-[10px] font-semibold text-slate-500 block">Asistente Responsable</span>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {asistentes.find(a => a.id === viewingCita.asistenteId)?.nombreCompleto || viewingCita.asistenteNombre || 'No asignada'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Inmueble y Operación */}
+              <div className="space-y-2">
+                <h4 className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                  <MapPin className="w-3.5 h-3.5 text-primary" />
+                  Propiedad & Operación
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white p-3 rounded-md border border-slate-200">
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-500 block">Distrito</span>
+                    <span className="text-xs font-bold text-slate-800 block">{viewingCita.distritoPropiedad || 'No especificado'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-500 block">Tipo & Operación</span>
+                    <span className="text-xs font-bold text-slate-800 block">
+                      {viewingCita.tipoPropiedad} • <span className="text-primary">{viewingCita.tipoOperacion}</span>
+                    </span>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-[10px] font-semibold text-slate-500 block">Dirección de la Propiedad</span>
+                    <span className="text-xs text-slate-700 block">{viewingCita.direccionPropiedad || 'Sin dirección especificada'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Fechas de Gestión */}
+              <div className="space-y-2">
+                <h4 className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                  <Calendar className="w-3.5 h-3.5 text-primary" />
+                  Fechas y Tiempos de Gestión
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-3 rounded-md border border-slate-200">
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-500 block">Fecha de Captación / Llamada</span>
+                    <span className="text-xs font-medium text-slate-800 block">
+                      {viewingCita.fechaLlamada ? formatToDDMMYYYY(viewingCita.fechaLlamada) : 'Sin fecha'} {viewingCita.horaLlamada ? `(${viewingCita.horaLlamada})` : ''}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-500 block">Fecha de Cita Agendada</span>
+                    <span className="text-xs font-medium text-slate-800 block">
+                      {viewingCita.fechaCita ? `${formatToDDMMYYYY(viewingCita.fechaCita)} (${viewingCita.horaCita || ''})` : 'Sin cita agendada'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-500 block">Próxima Re-Llamada</span>
+                    <span className="text-xs font-medium text-slate-800 block">
+                      {viewingCita.fechaNuevaLlamada ? formatToDDMMYYYY(viewingCita.fechaNuevaLlamada) : 'No requerida'}
+                    </span>
+                  </div>
+                  {viewingCita.fechaCierre && (
+                    <div className="sm:col-span-3 pt-1 border-t border-slate-100">
+                      <span className="text-[10px] font-semibold text-slate-500 block">Fecha de Cierre Comercial</span>
+                      <span className="text-xs font-bold text-emerald-700">{formatToDDMMYYYY(viewingCita.fechaCierre)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Section 4: Motivo / Detalle de Seguimiento */}
+              <div className="space-y-2">
+                <h4 className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  Motivo / Detalle de Seguimiento
+                </h4>
+                <div className="bg-slate-50 p-3 rounded-md border border-slate-200">
+                  {viewingCita.notas ? (
+                    <span className="inline-block bg-white px-2.5 py-1 rounded border border-slate-200 text-xs font-bold text-slate-800">
+                      {viewingCita.notas}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 italic text-xs">Sin motivo u observaciones registradas.</span>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
+              <span className="text-[11px] text-slate-500 italic">Modo Visor • Registro # {viewingCita.id.slice(0, 8)}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const toEdit = viewingCita;
+                    setViewingCita(null);
+                    handleEdit(toEdit);
+                  }}
+                  className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <Edit className="w-3.5 h-3.5 text-slate-500" />
+                  Editar
+                </button>
+                <button
+                  onClick={() => setViewingCita(null)}
+                  className="px-4 py-1.5 bg-navy hover:bg-navy/90 text-white text-xs font-bold rounded-md transition-colors cursor-pointer"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
