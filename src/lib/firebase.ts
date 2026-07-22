@@ -1,13 +1,11 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { initializeFirestore, doc, setDoc, deleteDoc, getDocs, collection, getDocFromServer } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true
-}, firebaseConfig.firestoreDatabaseId); /* CRITICAL: The app will break without this line */
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); /* CRITICAL: The app will break without this line */
 export const auth = getAuth();
 
 let googleProviderInstance: GoogleAuthProvider | null = null;
@@ -67,13 +65,14 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 // Validation helper for test connection
 export async function testConnection() {
+  if (!auth.currentUser) return false;
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
     console.log('Firebase connection verified successfully.');
     return true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration: Client is offline.");
+    if (error instanceof Error && (error.message.includes('offline') || error.message.includes('unavailable'))) {
+      console.warn("Firebase configuration check: operating in fallback or offline mode.");
     }
     return false;
   }

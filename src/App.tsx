@@ -24,6 +24,7 @@ import { Asistente, Cita, EstadoCita, EstadoCierre, TipoOperacionCita, ConfigGen
 import Dashboard from './components/Dashboard';
 import AsistentesManager from './components/AsistentesManager';
 import CitasManager from './components/CitasManager';
+import CalendarView from './components/CalendarView';
 import ReportesLiquidacion from './components/ReportesLiquidacion';
 import ConfigManager from './components/ConfigManager';
 import LockScreen from './components/LockScreen';
@@ -253,7 +254,6 @@ export default function App() {
   // Clean up any potential leftover dark class
   useEffect(() => {
     document.documentElement.classList.remove('dark');
-    testConnection();
   }, []);
 
   // 1. Initial Local Storage Load fallback
@@ -338,6 +338,7 @@ export default function App() {
 
       setUser(currentUser);
       setIsAuthLoading(false);
+      testConnection();
       
       if (currentUser) {
         try {
@@ -1110,6 +1111,21 @@ export default function App() {
                   Prospectos
                 </button>
 
+                {/* 5. Calendar View Tab (Calendario de Citas) */}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('calendario')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
+                    activeTab === 'calendario'
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-transparent'
+                  }`}
+                  id="tab_calendario_btn"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Calendario
+                </button>
+
                 {/* 4. Payroll report Tab */}
                 {userRole === 'admin' && (
                   <button
@@ -1185,6 +1201,13 @@ export default function App() {
               onSaveAsistente={handleSaveAsistente}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
+            />
+          )}
+
+          {activeTab === 'calendario' && (
+            <CalendarView 
+              citas={citas}
+              asistentes={asistentes}
             />
           )}
 
