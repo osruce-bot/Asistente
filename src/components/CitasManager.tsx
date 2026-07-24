@@ -159,9 +159,9 @@ export default function CitasManager({
   const [showDistritos, setShowDistritos] = useState(false);
 
   const isCelularRepetido = React.useMemo(() => {
-    const cleanCelular = clienteCelular.trim();
+    const cleanCelular = (clienteCelular || '').trim();
     if (!cleanCelular) return false;
-    return citas.some(c => c.clienteCelular.trim() === cleanCelular && c.id !== editingId);
+    return (citas || []).some(c => c && (c.clienteCelular || '').trim() === cleanCelular && c.id !== editingId);
   }, [clienteCelular, citas, editingId]);
 
   // States for monthly calls form
@@ -191,26 +191,27 @@ export default function CitasManager({
     if (!editingId) {
       setMontoBono(
         type === TipoOperacionCita.VENTA 
-          ? config.bonoVentaPredeterminado 
-          : config.bonoAlquilerPredeterminado
+          ? (config?.bonoVentaPredeterminado || 150) 
+          : (config?.bonoAlquilerPredeterminado || 100)
       );
     }
   };
 
   const handleEdit = (cita: Cita) => {
+    if (!cita) return;
     setEditingId(cita.id);
-    setAsistenteId(cita.asistenteId);
-    setFechaCita(cita.fechaCita);
-    setHoraCita(cita.horaCita);
-    setClienteNombre(cita.clienteNombre);
-    setClienteCelular(cita.clienteCelular);
-    setDireccionPropiedad(cita.direccionPropiedad);
-    setTipoPropiedad(cita.tipoPropiedad);
-    setTipoOperacion(cita.tipoOperacion);
-    setEstadoCita(cita.estadoCita);
-    setEstadoCierre(cita.estadoCierre);
+    setAsistenteId(cita.asistenteId || '');
+    setFechaCita(cita.fechaCita || '');
+    setHoraCita(cita.horaCita || '');
+    setClienteNombre(cita.clienteNombre || '');
+    setClienteCelular(cita.clienteCelular || '');
+    setDireccionPropiedad(cita.direccionPropiedad || '');
+    setTipoPropiedad(cita.tipoPropiedad || 'Departamento');
+    setTipoOperacion(cita.tipoOperacion || TipoOperacionCita.VENTA);
+    setEstadoCita(cita.estadoCita || EstadoCita.PROSPECTO);
+    setEstadoCierre(cita.estadoCierre || EstadoCierre.PENDIENTE);
     setFechaCierre(cita.fechaCierre || '');
-    setMontoBono(cita.montoBono);
+    setMontoBono(cita.montoBono ?? (config?.bonoVentaPredeterminado || 150));
     setNotas(cita.notas || '');
     setFechaLlamada(cita.fechaLlamada || getLocalDateString());
     setHoraLlamada(cita.horaLlamada || (() => {
@@ -219,7 +220,13 @@ export default function CitasManager({
       const mm = String(d.getMinutes()).padStart(2, '0');
       return `${hh}:${mm}`;
     })());
-    setFechaNuevaLlamada(cita.fechaNuevaLlamada || '');
+    const todayStr = getLocalDateString();
+    const isReprog = (cita.estadoCita || EstadoCita.PROSPECTO) === EstadoCita.REPROGRAMAR;
+    let initialFechaNueva = cita.fechaNuevaLlamada || '';
+    if (isReprog && (!initialFechaNueva || initialFechaNueva < todayStr)) {
+      initialFechaNueva = todayStr;
+    }
+    setFechaNuevaLlamada(initialFechaNueva);
     setDistritoPropiedad(cita.distritoPropiedad || '');
     setErrorMsg('');
     setSuccessMsg('');
@@ -304,10 +311,15 @@ export default function CitasManager({
     }
 
     const finalEstadoCita = estadoCita;
+    const todayStr = getLocalDateString();
+    let finalFechaNuevaLlamada = fechaNuevaLlamada;
 
-    if (finalEstadoCita === EstadoCita.REPROGRAMAR && !fechaNuevaLlamada) {
-      setErrorMsg('Por favor seleccione la fecha de la nueva llamada para reprogramar.');
-      return;
+    if (finalEstadoCita === EstadoCita.REPROGRAMAR) {
+      if (!finalFechaNuevaLlamada || finalFechaNuevaLlamada < todayStr) {
+        finalFechaNuevaLlamada = todayStr;
+      }
+    } else {
+      finalFechaNuevaLlamada = '';
     }
 
     const compiledCita: Cita = {
@@ -330,7 +342,7 @@ export default function CitasManager({
       notas: notas.trim(),
       fechaLlamada: fechaLlamada.trim(),
       horaLlamada: horaLlamada.trim(),
-      fechaNuevaLlamada: finalEstadoCita === EstadoCita.REPROGRAMAR ? fechaNuevaLlamada : '',
+      fechaNuevaLlamada: finalFechaNuevaLlamada,
       distritoPropiedad: distritoPropiedad.trim()
     };
 
@@ -395,12 +407,15 @@ export default function CitasManager({
   };
 
   // Filter appointments logic
-  const filteredCitas = citas.filter(cita => {
-    const matchesSearch = 
-      cita.clienteNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cita.asistenteNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cita.direccionPropiedad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cita.clienteCelular.includes(searchTerm);
+  const filteredCitas = (citas || []).filter(cita => {
+    if (!cita) return false;
+    const term = (searchTerm || '').trim().toLowerCase();
+    const matchesSearch = !term ||
+      (cita.clienteNombre || '').toLowerCase().includes(term) ||
+      (cita.asistenteNombre || '').toLowerCase().includes(term) ||
+      (cita.direccionPropiedad || '').toLowerCase().includes(term) ||
+      (cita.distritoPropiedad || '').toLowerCase().includes(term) ||
+      (cita.clienteCelular || '').includes(term);
 
     const matchesAsistente = filterAsistente === 'TODOS' || cita.asistenteId === filterAsistente;
     const matchesEstadoCita = filterEstadoCita === 'TODOS' || cita.estadoCita === filterEstadoCita;
@@ -410,13 +425,9 @@ export default function CitasManager({
   });
 
   const isReprogramadaAlert = (cita: Cita) => {
-    if (cita.estadoCita !== EstadoCita.REPROGRAMAR || !cita.fechaNuevaLlamada) return false;
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const todayStr = `${year}-${month}-${day}`;
-    return todayStr >= cita.fechaNuevaLlamada;
+    if (cita.estadoCita !== EstadoCita.REPROGRAMAR) return false;
+    const todayStr = getLocalDateString();
+    return !cita.fechaNuevaLlamada || cita.fechaNuevaLlamada <= todayStr;
   };
 
   const sortedCitas = React.useMemo(() => {
@@ -753,7 +764,16 @@ export default function CitasManager({
                 <select
                   id="select_estado_cita"
                   value={estadoCita}
-                  onChange={(e) => setEstadoCita(e.target.value as EstadoCita)}
+                  onChange={(e) => {
+                    const val = e.target.value as EstadoCita;
+                    setEstadoCita(val);
+                    if (val === EstadoCita.REPROGRAMAR) {
+                      const todayStr = getLocalDateString();
+                      if (!fechaNuevaLlamada || fechaNuevaLlamada < todayStr) {
+                        setFechaNuevaLlamada(todayStr);
+                      }
+                    }
+                  }}
                   disabled={isCelularRepetido}
                   className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

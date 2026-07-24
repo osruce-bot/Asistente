@@ -59,8 +59,8 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  console.warn('Firestore sync notice (continuing in local mode):', JSON.stringify(errInfo));
+  // We log the error gracefully without throwing, ensuring state updates and localStorage operations complete uninterrupted.
 }
 
 // Validation helper for test connection

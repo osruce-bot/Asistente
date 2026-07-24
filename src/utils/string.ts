@@ -7,8 +7,8 @@
  * Capitalizes the first letter of each word in a string, preserving spacing.
  * Handles Spanish accented letters (á, é, í, ó, ú, ñ) correctly.
  */
-export function capitalizeWords(str: string): string {
-  if (!str) return str;
+export function capitalizeWords(str?: string | null): string {
+  if (typeof str !== 'string' || !str) return str || '';
   return str
     .split(/(\s+)/)
     .map((part) => {

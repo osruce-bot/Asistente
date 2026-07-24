@@ -106,19 +106,17 @@ export default function ConfigManager({
     if (!target) return;
 
     if (target.usuario === 'oscar') {
-      alert('Por medidas de seguridad, el usuario principal "oscar" no se puede eliminar.');
+      setErrorAcceso('Por medidas de seguridad, el usuario principal "oscar" no se puede eliminar.');
       return;
     }
 
     const adminsCount = accesos.filter(a => a.rol === 'admin').length;
     if (target.rol === 'admin' && adminsCount <= 1) {
-      alert('Debe mantener al menos un usuario con el rol de Administrador.');
+      setErrorAcceso('Debe mantener al menos un usuario con el rol de Administrador.');
       return;
     }
 
-    if (window.confirm(`¿Está seguro de revocar el acceso a "${target.nombre}"?`)) {
-      setAccesos(accesos.filter(a => a.id !== id));
-    }
+    setAccesos(accesos.filter(a => a.id !== id));
   };
 
   const handlePasswordChange = (id: string, newPassword: string) => {
@@ -154,30 +152,28 @@ export default function ConfigManager({
   };
 
   const resetToPeruDefaults = () => {
-    if (window.confirm('¿Confirmas que deseas restaurar los valores predeterminados de ley para Perú?')) {
-      setRmvVigente(1130);
-      setBonoVenta(150);
-      setBonoAlquiler(80);
-      setClaveAdmin('admin123');
-      setClaveAsistente('asistente123');
-      const defaultAccesos: AccesoUsuario[] = [
-        { id: 'acc-1', nombre: 'Oscar Russo', usuario: 'oscar', rol: 'admin', clave: 'admin123' },
-        { id: 'acc-2', nombre: 'Asistente Principal', usuario: 'asistente', rol: 'asistente', clave: 'asistente123' }
-      ];
-      setAccesos(defaultAccesos);
-      
-      onSaveConfig({
-        rmvVigente: 1130,
-        bonoVentaPredeterminado: 150,
-        bonoAlquilerPredeterminado: 80,
-        claveAdmin: 'admin123',
-        claveAsistente: 'asistente123',
-        accesosPermitidos: defaultAccesos
-      });
+    setRmvVigente(1130);
+    setBonoVenta(150);
+    setBonoAlquiler(80);
+    setClaveAdmin('admin123');
+    setClaveAsistente('asistente123');
+    const defaultAccesos: AccesoUsuario[] = [
+      { id: 'acc-1', nombre: 'Oscar Russo', usuario: 'oscar', rol: 'admin', clave: 'admin123' },
+      { id: 'acc-2', nombre: 'Asistente Principal', usuario: 'asistente', rol: 'asistente', clave: 'asistente123' }
+    ];
+    setAccesos(defaultAccesos);
+    
+    onSaveConfig({
+      rmvVigente: 1130,
+      bonoVentaPredeterminado: 150,
+      bonoAlquilerPredeterminado: 80,
+      claveAdmin: 'admin123',
+      claveAsistente: 'asistente123',
+      accesosPermitidos: defaultAccesos
+    });
 
-      setSuccessMsg('Valores estándar de ley restaurados con éxito.');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    }
+    setSuccessMsg('Valores estándar de ley restaurados con éxito.');
+    setTimeout(() => setSuccessMsg(''), 4000);
   };
 
   return (

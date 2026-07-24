@@ -28,6 +28,7 @@ import CalendarView from './components/CalendarView';
 import ReportesLiquidacion from './components/ReportesLiquidacion';
 import ConfigManager from './components/ConfigManager';
 import LockScreen from './components/LockScreen';
+import { getLocalDateString } from './utils/date';
 
 // Firebase Integrations
 import { 
@@ -571,6 +572,44 @@ export default function App() {
     setCitas(newCitas);
     localStorage.setItem('remax_hr_citas', JSON.stringify(newCitas));
   };
+
+  // Auto-assign today's date to any "REPROGRAMAR" call that is overdue or missing a new date
+  useEffect(() => {
+    if (!citas || citas.length === 0) return;
+    const todayStr = getLocalDateString();
+    let hasChanges = false;
+
+    const updatedCitas = citas.map((cita) => {
+      if (cita.estadoCita === EstadoCita.REPROGRAMAR) {
+        if (!cita.fechaNuevaLlamada || cita.fechaNuevaLlamada < todayStr) {
+          hasChanges = true;
+          return {
+            ...cita,
+            fechaNuevaLlamada: todayStr,
+          };
+        }
+      }
+      return cita;
+    });
+
+    if (hasChanges) {
+      saveAndSyncCitas(updatedCitas);
+      if (auth.currentUser) {
+        try {
+          const batch = writeBatch(db);
+          updatedCitas.forEach((c) => {
+            if (c.estadoCita === EstadoCita.REPROGRAMAR && c.fechaNuevaLlamada === todayStr) {
+              const docRef = doc(db, 'citas', c.id);
+              batch.set(docRef, { ...c, ownerId: WORKSPACE_ID }, { merge: true });
+            }
+          });
+          batch.commit().catch((err) => console.warn('Error syncing auto-rescheduled calls:', err));
+        } catch (e) {
+          console.warn('Batch update error for auto-rescheduled calls:', e);
+        }
+      }
+    }
+  }, [citas]);
 
   const saveAndSyncConfig = (newConfig: ConfigGeneral) => {
     setConfig(newConfig);

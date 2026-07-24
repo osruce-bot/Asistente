@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Cita, Asistente, EstadoCita } from '../types';
 import { formatToDDMMYYYY } from '../utils/currency';
+import { getLocalDateString } from '../utils/date';
 
 interface CalendarViewProps {
   citas: Cita[];
@@ -113,13 +114,17 @@ export default function CalendarView({ citas, asistentes }: CalendarViewProps) {
       }
 
       // 2. Re-llamada Event
-      if (c.fechaNuevaLlamada) {
+      if (c.fechaNuevaLlamada || c.estadoCita === EstadoCita.REPROGRAMAR) {
+        const targetDate = (c.fechaNuevaLlamada && c.fechaNuevaLlamada >= getLocalDateString())
+          ? c.fechaNuevaLlamada
+          : getLocalDateString();
+
         if (filterType === 'TODOS' || filterType === 'RELLAMADAS') {
           events.push({
-            id: `rellamada_${c.id}_${c.fechaNuevaLlamada}`,
+            id: `rellamada_${c.id}_${targetDate}`,
             citaId: c.id,
             eventType: 'rellamada',
-            dateStr: c.fechaNuevaLlamada,
+            dateStr: targetDate,
             timeStr: '10:00',
             clienteNombre: c.clienteNombre || 'Sin nombre',
             clienteCelular: c.clienteCelular || '',

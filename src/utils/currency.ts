@@ -6,13 +6,14 @@
 /**
  * Formats a number as Peruvian Soles (S/.)
  */
-export function formatPEN(amount: number): string {
+export function formatPEN(amount?: number | null): string {
+  const safeAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 0;
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',
     currency: 'PEN',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(safeAmount);
 }
 
 /**

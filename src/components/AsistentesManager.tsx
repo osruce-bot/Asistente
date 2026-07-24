@@ -86,19 +86,20 @@ export default function AsistentesManager({
   const [cantidadLlamadas, setCantidadLlamadas] = useState<number | ''>('');
 
   const handleEdit = (as: Asistente) => {
+    if (!as) return;
     setEditingId(as.id);
-    setNombreCompleto(as.nombreCompleto);
-    setDni(as.dni);
-    setCelular(as.celular);
-    setCorreo(as.correo);
-    setBanco(as.banco);
-    setTipoCuenta(as.tipoCuenta);
-    setNumeroCuenta(as.numeroCuenta);
-    setCci(as.cci);
-    setFechaIngreso(as.fechaIngreso);
-    setCargo(as.cargo);
-    setSueldoBasico(as.sueldoBasico);
-    setActivo(as.activo);
+    setNombreCompleto(as.nombreCompleto || '');
+    setDni(as.dni || '');
+    setCelular(as.celular || '');
+    setCorreo(as.correo || '');
+    setBanco(as.banco || 'BCP');
+    setTipoCuenta(as.tipoCuenta || 'Ahorros');
+    setNumeroCuenta(as.numeroCuenta || '');
+    setCci(as.cci || '');
+    setFechaIngreso(as.fechaIngreso || '');
+    setCargo(as.cargo || 'Asistente Inmobiliario');
+    setSueldoBasico(as.sueldoBasico ?? (config?.rmvVigente || 1130));
+    setActivo(as.activo ?? true);
     setErrorMsg('');
     setSuccessMsg('');
     // Scroll form to view
@@ -220,12 +221,15 @@ export default function AsistentesManager({
   };
 
   // Filter assistants based on search
-  const filteredAsistentes = asistentes.filter(as => 
-    as.nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    as.dni.includes(searchTerm) ||
-    as.cargo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    as.banco.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAsistentes = (asistentes || []).filter(as => {
+    if (!as) return false;
+    const q = (searchTerm || '').trim().toLowerCase();
+    return !q ||
+      (as.nombreCompleto || '').toLowerCase().includes(q) ||
+      (as.dni || '').includes(q) ||
+      (as.cargo || '').toLowerCase().includes(q) ||
+      (as.banco || '').toLowerCase().includes(q);
+  });
 
   return (
     <div className="space-y-6" id="asistentes_manager_root">
