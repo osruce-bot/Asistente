@@ -233,9 +233,7 @@ const DEFAULT_CONFIG: ConfigGeneral = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
-  const [userRole, setUserRole] = useState<'admin' | 'asistente' | null>(() => {
-    return sessionStorage.getItem('remax_user_role') as 'admin' | 'asistente' | null;
-  });
+  const [userRole, setUserRole] = useState<'admin' | 'asistente' | null>(null);
   const [asistentes, setAsistentes] = useState<Asistente[]>([]);
   const [citas, setCitas] = useState<Cita[]>([]);
   const [config, setConfig] = useState<ConfigGeneral>(DEFAULT_CONFIG);
@@ -248,9 +246,25 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [logoutModalOpen, setLogoutModalOpen] = useState<boolean>(false);
-  const [unlockedProfileName, setUnlockedProfileName] = useState<string>(() => {
-    return sessionStorage.getItem('remax_profile_name') || '';
-  });
+  const [unlockedProfileName, setUnlockedProfileName] = useState<string>('');
+
+  // Strict session security: Clear session storage on unload/page close to force credential login on return
+  useEffect(() => {
+    const clearSession = () => {
+      sessionStorage.removeItem('remax_user_role');
+      sessionStorage.removeItem('remax_profile_name');
+    };
+
+    clearSession(); // Always force fresh lock on initial app load
+
+    window.addEventListener('beforeunload', clearSession);
+    window.addEventListener('pagehide', clearSession);
+
+    return () => {
+      window.removeEventListener('beforeunload', clearSession);
+      window.removeEventListener('pagehide', clearSession);
+    };
+  }, []);
 
   // Clean up any potential leftover dark class
   useEffect(() => {

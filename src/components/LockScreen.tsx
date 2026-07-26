@@ -128,6 +128,13 @@ export default function LockScreen({
 
           <form onSubmit={handleVerify} className="space-y-4">
             
+            <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-md flex items-start gap-2.5 text-[10px] text-slate-700 font-medium">
+              <Shield className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <p className="leading-snug">
+                <strong className="font-bold text-slate-800">Seguridad de Sesión Activa:</strong> Por protección de datos confidenciales de RE/MAX Power Expo, al cerrar la página o navegador la sesión se bloqueará automáticamente y se requerirá ingresar clave nuevamente.
+              </p>
+            </div>
+
             {/* Account select field */}
             <div className="space-y-2">
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
