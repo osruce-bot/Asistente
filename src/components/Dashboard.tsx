@@ -56,12 +56,16 @@ export default function Dashboard({
   // Stats calculations
   const totalAsistentes = asistentes.length;
   const asistentesActivos = asistentes.filter(as => as.activo).length;
-  const totalCitas = filteredCitas.length;
+  const totalCitasRegistradas = filteredCitas.length;
   
   // Appointment states
   const citasAgendadas = filteredCitas.filter(c => c.estadoCita === EstadoCita.AGENDADA).length;
-  const citasRealizadas = filteredCitas.filter(c => c.estadoCita === EstadoCita.REALIZADA).length;
-  const citasCanceladas = filteredCitas.filter(c => c.estadoCita === EstadoCita.CANCELADA).length;
+  // Citas Logradas / Ejecutadas: Strictly appointments that were executed (REALIZADA or closed)
+  const citasRealizadas = filteredCitas.filter(c => c.estadoCita === EstadoCita.REALIZADA || c.estadoCierre === EstadoCierre.CERRADO || c.estadoCierre === EstadoCierre.LIQUIDADO).length;
+  const citasCanceladas = filteredCitas.filter(c => c.estadoCita === EstadoCita.CANCELADA || c.estadoCita === EstadoCita.REPROGRAMAR).length;
+  
+  // Strict KPI count: Only executed appointments are counted as Citas Logradas
+  const totalCitas = citasRealizadas;
   
   // Cierre states
   const cierresConcretados = filteredCitas.filter(c => c.estadoCierre === EstadoCierre.CERRADO || c.estadoCierre === EstadoCierre.LIQUIDADO).length;
@@ -81,20 +85,15 @@ export default function Dashboard({
     ? citas.filter(c => c.fechaLlamada?.startsWith(filterMonth)).length
     : citas.filter(c => !!c.fechaLlamada).length;
 
-  // Conversion rate: Citas Realizadas / Total Citas
-  const conversionCitasRealizadas = totalCitas > 0 ? Math.round((citasRealizadas / totalCitas) * 100) : 0;
-  // Cierres / Citas Realizadas
-  const conversionCierres = citasRealizadas > 0 ? Math.round((cierresConcretados / citasRealizadas) * 100) : 0;
-
-  // New precise conversion ratios:
-  // 1. Ratio of Calls vs. Total Logged Appointments (Efectividad de Prospección)
-  const ratioLlamadasCitas = totalLlamadas > 0 ? ((totalCitas / totalLlamadas) * 100).toFixed(1) : '0.0';
-  // 2. Ratio of Appointments vs. Closures (Efectividad de Cierre)
-  const ratioCitasCierres = totalCitas > 0 ? ((cierresConcretados / totalCitas) * 100).toFixed(1) : '0.0';
+  // Conversion rates based strictly on executed appointments:
+  // 1. Ratio of Calls vs. Executed Appointments
+  const ratioLlamadasCitas = totalLlamadas > 0 ? ((citasRealizadas / totalLlamadas) * 100).toFixed(1) : '0.0';
+  // 2. Ratio of Executed Appointments vs. Closures
+  const ratioCitasCierres = citasRealizadas > 0 ? ((cierresConcretados / citasRealizadas) * 100).toFixed(1) : '0.0';
   // 3. Ratio of Calls vs. Closures (Eficiencia Integral)
   const ratioLlamadasCierres = totalLlamadas > 0 ? ((cierresConcretados / totalLlamadas) * 100).toFixed(2) : '0.00';
 
-  const promedioLlamadasPorCita = totalCitas > 0 ? (totalLlamadas / totalCitas).toFixed(1) : '0';
+  const promedioLlamadasPorCita = citasRealizadas > 0 ? (totalLlamadas / citasRealizadas).toFixed(1) : '0';
   const promedioLlamadasPorCierre = cierresConcretados > 0 ? (totalLlamadas / cierresConcretados).toFixed(1) : '0';
 
   // Analizar motivos de seguimiento
@@ -227,16 +226,16 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* Total Appointments */}
+        {/* Total Executed Appointments */}
         <div className="p-4 bg-white rounded-md border border-slate-200 shadow-sm flex items-center justify-between hover:border-slate-300 transition-colors">
           <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Citas Logradas</span>
-            <span className="text-2xl font-bold text-slate-900 font-mono block">{totalCitas}</span>
+            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Citas Logradas (Ejecutadas)</span>
+            <span className="text-2xl font-bold text-emerald-600 font-mono block">{citasRealizadas}</span>
             <div className="text-[10px] text-slate-500 font-semibold font-mono">
-              <span className="text-emerald-600">{citasRealizadas} exitosas</span> • <span className="text-slate-400">{citasAgendadas} agend.</span>
+              <span className="text-blue-600">{citasAgendadas} agend. pend.</span> • <span className="text-slate-400">{citasCanceladas} no ejecutadas</span>
             </div>
           </div>
-          <div className="p-2.5 bg-slate-50 text-slate-700 rounded border border-slate-200">
+          <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-100">
             <Calendar className="w-5 h-5" />
           </div>
         </div>
@@ -309,7 +308,7 @@ export default function Dashboard({
                   Embudo de Eficiencia Comercial y Ratios de Conversión
                 </h3>
                 <p className="text-[10px] text-slate-500">
-                  Desempeño acumulado en base a {totalLlamadas} llamadas, {totalCitas} citas logradas y {cierresConcretados} cierres concretados.
+                  Desempeño acumulado en base a {totalLlamadas} llamadas, {citasRealizadas} citas ejecutadas como tal y {cierresConcretados} cierres concretados.
                 </p>
               </div>
               <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-bold uppercase">
@@ -323,7 +322,7 @@ export default function Dashboard({
               {/* Ratio 1: Llamadas vs Efectividad en Citas */}
               <div className="border border-slate-100 p-3.5 rounded bg-slate-50/50 space-y-2 flex flex-col justify-between">
                 <div className="space-y-1">
-                  <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider block">1. Llamadas ➔ Citas Logradas</span>
+                  <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider block">1. Llamadas ➔ Citas Ejecutadas</span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-mono font-bold text-slate-800">{ratioLlamadasCitas}%</span>
                     <span className="text-[10px] text-slate-400">de efectividad</span>
@@ -331,7 +330,7 @@ export default function Dashboard({
                 </div>
                 <div className="pt-1.5 border-t border-slate-100/80">
                   <p className="text-[10px] text-slate-600 leading-relaxed">
-                    Se requiere un promedio de <strong className="text-primary font-mono">{promedioLlamadasPorCita}</strong> llamadas realizadas para conseguir <strong>1 cita lograda</strong>.
+                    Se requiere un promedio de <strong className="text-primary font-mono">{promedioLlamadasPorCita}</strong> llamadas realizadas para lograr <strong>1 cita ejecutada como tal</strong>.
                   </p>
                 </div>
               </div>
@@ -339,7 +338,7 @@ export default function Dashboard({
               {/* Ratio 2: Citas vs Cierres (Citas en Cierre) */}
               <div className="border border-slate-100 p-3.5 rounded bg-slate-50/50 space-y-2 flex flex-col justify-between">
                 <div className="space-y-1">
-                  <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider block">2. Citas Logradas ➔ Cierres</span>
+                  <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider block">2. Citas Ejecutadas ➔ Cierres</span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-mono font-bold text-emerald-600">{ratioCitasCierres}%</span>
                     <span className="text-[10px] text-slate-400">de conversión</span>
@@ -347,7 +346,7 @@ export default function Dashboard({
                 </div>
                 <div className="pt-1.5 border-t border-slate-100/80">
                   <p className="text-[10px] text-slate-600 leading-relaxed">
-                    De cada 10 citas logradas por la asistente, se concretan aproximadamente <strong className="text-emerald-600 font-mono">{(Number(ratioCitasCierres)/10).toFixed(1)}</strong> cierres de venta/alquiler.
+                    De cada 10 citas ejecutadas por la asistente, se concretan aproximadamente <strong className="text-emerald-600 font-mono">{(Number(ratioCitasCierres)/10).toFixed(1)}</strong> cierres de venta/alquiler.
                   </p>
                 </div>
               </div>
@@ -465,22 +464,27 @@ export default function Dashboard({
                           ? citas.filter(c => c.asistenteId === as.id && c.fechaLlamada?.startsWith(filterMonth)).length
                           : citas.filter(c => c.asistenteId === as.id && !!c.fechaLlamada).length;
 
-                        // filter appointments for this assistant (excluding prospects, since they are not appointments yet)
+                        // filter appointments for this assistant (excluding prospects)
                         const citasAsistente = citas.filter(c => c.asistenteId === as.id && c.estadoCita !== EstadoCita.PROSPECTO);
                         const citasFiltradas = filterMonth 
                           ? citasAsistente.filter(c => c.fechaCita && c.fechaCita.startsWith(filterMonth))
                           : citasAsistente;
 
+                        // Only count executed appointments (REALIZADA or closed/liquidated) for KPI
+                        const citasEjecutadasAsistente = citasFiltradas.filter(
+                          c => c.estadoCita === EstadoCita.REALIZADA || c.estadoCierre === EstadoCierre.CERRADO || c.estadoCierre === EstadoCierre.LIQUIDADO
+                        ).length;
+
                         // filter closed/liquidated appointments
                         const cierresFiltrados = citasFiltradas.filter(c => c.estadoCierre === EstadoCierre.CERRADO || c.estadoCierre === EstadoCierre.LIQUIDADO);
 
-                        // calculate conversion ratios
+                        // calculate conversion ratios based strictly on executed appointments
                         const ratioLlamadasCitas = llamadasDelMes > 0 
-                          ? ((citasFiltradas.length / llamadasDelMes) * 100).toFixed(1)
+                          ? ((citasEjecutadasAsistente / llamadasDelMes) * 100).toFixed(1)
                           : '0.0';
 
-                        const ratioCitasCierres = citasFiltradas.length > 0
-                          ? ((cierresFiltrados.length / citasFiltradas.length) * 100).toFixed(1)
+                        const ratioCitasCierres = citasEjecutadasAsistente > 0
+                          ? ((cierresFiltrados.length / citasEjecutadasAsistente) * 100).toFixed(1)
                           : '0.0';
 
                         return (
@@ -495,8 +499,8 @@ export default function Dashboard({
                             <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-900">
                               {llamadasDelMes}
                             </td>
-                            <td className="py-2.5 px-3 text-center font-mono font-bold text-primary">
-                              {citasFiltradas.length}
+                            <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-600">
+                              {citasEjecutadasAsistente}
                             </td>
                             <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-600">
                               {cierresFiltrados.length}
@@ -504,10 +508,10 @@ export default function Dashboard({
                             <td className="py-2.5 px-3 text-right">
                               <div className="space-y-0.5">
                                 <span className="text-[10px] font-mono text-slate-600 block">
-                                  Llam. ➔ Cita: <strong className="text-primary font-bold">{ratioLlamadasCitas}%</strong>
+                                  Llam. ➔ Cita Exec.: <strong className="text-primary font-bold">{ratioLlamadasCitas}%</strong>
                                 </span>
                                 <span className="text-[10px] font-mono text-slate-600 block">
-                                  Cita ➔ Cierre: <strong className="text-emerald-600 font-bold">{ratioCitasCierres}%</strong>
+                                  Cita Exec. ➔ Cierre: <strong className="text-emerald-600 font-bold">{ratioCitasCierres}%</strong>
                                 </span>
                               </div>
                             </td>

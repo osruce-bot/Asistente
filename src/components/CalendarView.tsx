@@ -13,7 +13,9 @@ import {
   Calendar as CalendarIcon,
   Search,
   CheckCircle2,
-  CalendarDays
+  CalendarDays,
+  CalendarX,
+  RotateCcw
 } from 'lucide-react';
 import { Cita, Asistente, EstadoCita } from '../types';
 import { formatToDDMMYYYY } from '../utils/currency';
@@ -22,6 +24,7 @@ import { getLocalDateString } from '../utils/date';
 interface CalendarViewProps {
   citas: Cita[];
   asistentes: Asistente[];
+  onSaveCita?: (cita: Cita) => void;
 }
 
 export type CalendarScale = 'mes' | 'semana' | 'dia' | 'lista';
@@ -45,7 +48,7 @@ export interface CalendarEventItem {
   rawCita: Cita;
 }
 
-export default function CalendarView({ citas, asistentes }: CalendarViewProps) {
+export default function CalendarView({ citas, asistentes, onSaveCita }: CalendarViewProps) {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -56,6 +59,102 @@ export default function CalendarView({ citas, asistentes }: CalendarViewProps) {
   const [filterType, setFilterType] = useState<'TODOS' | 'CITAS' | 'RELLAMADAS'>('TODOS');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventItem | null>(null);
+
+  // Drag and drop state
+  const [draggedEvent, setDraggedEvent] = useState<CalendarEventItem | null>(null);
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, evt: CalendarEventItem) => {
+    e.dataTransfer.setData('text/plain', JSON.stringify({ citaId: evt.citaId, eventType: evt.eventType }));
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedEvent(evt);
+  };
+
+  const handleDragOver = (e: React.DragEvent, dateStr: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverDate !== dateStr) {
+      setDragOverDate(dateStr);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent, dateStr: string) => {
+    e.preventDefault();
+    if (dragOverDate === dateStr) {
+      setDragOverDate(null);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedEvent(null);
+    setDragOverDate(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetDateStr: string) => {
+    e.preventDefault();
+    setDragOverDate(null);
+
+    if (!draggedEvent) return;
+
+    if (draggedEvent.dateStr === targetDateStr) {
+      setDraggedEvent(null);
+      return;
+    }
+
+    const citaToUpdate = citas.find(c => c.id === draggedEvent.citaId);
+    if (!citaToUpdate) {
+      setDraggedEvent(null);
+      return;
+    }
+
+    const updatedCita: Cita = { ...citaToUpdate };
+
+    if (draggedEvent.eventType === 'cita') {
+      updatedCita.fechaCita = targetDateStr;
+      if (updatedCita.estadoCita === EstadoCita.PROSPECTO) {
+        updatedCita.estadoCita = EstadoCita.AGENDADA;
+      }
+    } else if (draggedEvent.eventType === 'rellamada') {
+      updatedCita.fechaNuevaLlamada = targetDateStr;
+    }
+
+    if (onSaveCita) {
+      onSaveCita(updatedCita);
+      const formattedDate = formatToDDMMYYYY(targetDateStr);
+      const tipo = draggedEvent.eventType === 'cita' ? 'Cita' : 'Re-llamada';
+      setToastMessage(`¡${tipo} de ${draggedEvent.clienteNombre} trasladada exitosamente al ${formattedDate}!`);
+      setTimeout(() => setToastMessage(null), 4000);
+    }
+
+    setDraggedEvent(null);
+  };
+
+  const handleRemoveFromCalendar = (evt: CalendarEventItem) => {
+    const citaToUpdate = citas.find(c => c.id === evt.citaId);
+    if (!citaToUpdate) return;
+
+    const updatedCita: Cita = { ...citaToUpdate };
+
+    if (evt.eventType === 'cita') {
+      // Clear appointment date & reset status to Prospecto so card is removed from calendar but lead stays in Prospectos
+      updatedCita.fechaCita = '';
+      updatedCita.horaCita = '';
+      updatedCita.estadoCita = EstadoCita.PROSPECTO;
+    } else if (evt.eventType === 'rellamada') {
+      // Clear follow-up call date
+      updatedCita.fechaNuevaLlamada = '';
+    }
+
+    if (onSaveCita) {
+      onSaveCita(updatedCita);
+      setToastMessage(`Tarjeta de ${evt.clienteNombre} quitada del calendario. El cliente se mantiene 100% conservado en la lista de Prospectos.`);
+      setTimeout(() => setToastMessage(null), 5000);
+    }
+
+    setSelectedEvent(null);
+  };
 
   // Month metadata
   const currentYear = currentDate.getFullYear();
@@ -440,6 +539,33 @@ export default function CalendarView({ citas, asistentes }: CalendarViewProps) {
         </div>
       </div>
 
+      {/* DRAG AND DROP INSTRUCTION BANNER & TOAST */}
+      {(scale === 'mes' || scale === 'semana') && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50/60 px-4 py-2 border-b border-blue-100/80 flex items-center justify-between text-xs text-blue-900">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse shrink-0"></span>
+            <span className="font-semibold text-[11px] text-blue-800">
+              <strong>Reprogramación rápida:</strong> Mantén presionada cualquier cita o re-llamada y arrástrala hacia otro día para reprogramar su fecha automáticamente.
+            </span>
+          </div>
+          {draggedEvent && (
+            <span className="text-[10px] bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full shadow-2xs">
+              Moviendo: {draggedEvent.clienteNombre}
+            </span>
+          )}
+        </div>
+      )}
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 animate-slide-up max-w-md">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <p className="text-xs font-semibold leading-tight">{toastMessage}</p>
+          <button onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-white ml-2">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* CALENDAR BODY */}
       <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden">
         
@@ -461,17 +587,25 @@ export default function CalendarView({ citas, asistentes }: CalendarViewProps) {
             <div className="flex-1 grid grid-cols-7 divide-x divide-y divide-slate-200/60 bg-slate-100/30 overflow-y-auto">
               {monthGridDays.map((cell) => {
                 const dayEvents = eventsByDate[cell.dateStr] || [];
+                const isHovered = dragOverDate === cell.dateStr;
 
                 return (
                   <div
                     key={cell.dateStr}
+                    onDragOver={(e) => handleDragOver(e, cell.dateStr)}
+                    onDragLeave={(e) => handleDragLeave(e, cell.dateStr)}
+                    onDrop={(e) => handleDrop(e, cell.dateStr)}
                     onClick={() => {
                       setCurrentDate(cell.dateObj);
                       setScale('dia');
                     }}
                     className={`min-h-[110px] sm:min-h-[120px] p-1.5 transition-all flex flex-col justify-start gap-1 group ${
-                      cell.isCurrentMonth ? 'bg-white' : 'bg-[#fcfcfd] text-slate-300'
-                    } ${cell.isToday ? 'bg-[#007AFF]/5' : ''} hover:bg-slate-50/80 cursor-pointer`}
+                      isHovered
+                        ? 'bg-blue-100/80 ring-2 ring-[#007AFF] ring-inset z-10'
+                        : cell.isCurrentMonth
+                        ? 'bg-white'
+                        : 'bg-[#fcfcfd] text-slate-300'
+                    } ${cell.isToday && !isHovered ? 'bg-[#007AFF]/5' : ''} hover:bg-slate-50/80 cursor-pointer`}
                   >
                     {/* Cell Top Bar */}
                     <div className="flex items-center justify-between mb-0.5 shrink-0">
@@ -494,15 +628,21 @@ export default function CalendarView({ citas, asistentes }: CalendarViewProps) {
                     <div className="space-y-1 overflow-y-auto flex-1 w-full no-scrollbar">
                       {dayEvents.map((evt) => {
                         const isCita = evt.eventType === 'cita';
+                        const isBeingDragged = draggedEvent?.id === evt.id;
 
                         return (
                           <div
                             key={evt.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, evt)}
+                            onDragEnd={handleDragEnd}
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedEvent(evt);
                             }}
-                            className={`p-1.5 rounded-lg border text-[11px] font-medium leading-tight transition-all cursor-pointer shadow-2xs hover:scale-[1.02] ${
+                            className={`p-1.5 rounded-lg border text-[11px] font-medium leading-tight transition-all cursor-grab active:cursor-grabbing shadow-2xs hover:scale-[1.02] ${
+                              isBeingDragged ? 'opacity-30 border-dashed border-blue-500 scale-95' : ''
+                            } ${
                               isCita 
                                 ? 'bg-[#007AFF]/10 border-[#007AFF]/30 text-[#0051B3] hover:bg-[#007AFF]/20' 
                                 : 'bg-[#FF9500]/10 border-[#FF9500]/30 text-[#B36200] hover:bg-[#FF9500]/20'
@@ -561,25 +701,41 @@ export default function CalendarView({ citas, asistentes }: CalendarViewProps) {
             <div className="flex-1 grid grid-cols-7 divide-x divide-slate-200/70 bg-white overflow-y-auto">
               {weekDays.map((wd) => {
                 const dayEvents = eventsByDate[wd.dateStr] || [];
+                const isHovered = dragOverDate === wd.dateStr;
 
                 return (
                   <div
                     key={wd.dateStr}
-                    className={`p-2.5 flex flex-col gap-2 min-h-[500px] ${
-                      wd.isToday ? 'bg-[#007AFF]/5' : 'bg-white'
+                    onDragOver={(e) => handleDragOver(e, wd.dateStr)}
+                    onDragLeave={(e) => handleDragLeave(e, wd.dateStr)}
+                    onDrop={(e) => handleDrop(e, wd.dateStr)}
+                    className={`p-2.5 flex flex-col gap-2 min-h-[500px] transition-all ${
+                      isHovered
+                        ? 'bg-blue-100/80 ring-2 ring-[#007AFF] ring-inset z-10'
+                        : wd.isToday
+                        ? 'bg-[#007AFF]/5'
+                        : 'bg-white'
                     }`}
                   >
                     {dayEvents.length === 0 ? (
-                      <div className="text-center py-10 text-[11px] text-slate-300 italic">Sin agenda</div>
+                      <div className="text-center py-10 text-[11px] text-slate-300 italic">
+                        {isHovered ? '¡Soltar para reprogramar!' : 'Sin agenda'}
+                      </div>
                     ) : (
                       dayEvents.map((evt) => {
                         const isCita = evt.eventType === 'cita';
+                        const isBeingDragged = draggedEvent?.id === evt.id;
 
                         return (
                           <div
                             key={evt.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, evt)}
+                            onDragEnd={handleDragEnd}
                             onClick={() => setSelectedEvent(evt)}
-                            className={`p-2.5 rounded-xl border text-xs transition-all cursor-pointer shadow-2xs hover:shadow-sm ${
+                            className={`p-2.5 rounded-xl border text-xs transition-all cursor-grab active:cursor-grabbing shadow-2xs hover:shadow-sm ${
+                              isBeingDragged ? 'opacity-30 border-dashed border-blue-500 scale-95' : ''
+                            } ${
                               isCita 
                                 ? 'bg-blue-50/90 border-blue-200 text-blue-950 hover:bg-blue-100' 
                                 : 'bg-amber-50/90 border-amber-300 text-amber-950 hover:bg-amber-100'
@@ -926,10 +1082,21 @@ export default function CalendarView({ citas, asistentes }: CalendarViewProps) {
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
               <button
+                type="button"
+                onClick={() => handleRemoveFromCalendar(selectedEvent)}
+                className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Quita esta fecha de agendamiento del calendario pero conserva la información del cliente en Prospectos"
+              >
+                <CalendarX className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Quitar de Calendario (Conservar Prospecto)</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setSelectedEvent(null)}
-                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs"
               >
                 Cerrar Visor
               </button>

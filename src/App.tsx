@@ -1289,6 +1289,7 @@ export default function App() {
             <CalendarView 
               citas={citas}
               asistentes={asistentes}
+              onSaveCita={handleSaveCita}
             />
           )}
 
