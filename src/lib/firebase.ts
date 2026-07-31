@@ -65,6 +65,22 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   // We log the error gracefully without throwing, ensuring state updates and localStorage operations complete uninterrupted.
 }
 
+// Utility function to remove undefined properties before saving to Firestore (prevents Unsupported field value: undefined errors)
+export function cleanFirestoreObject<T extends Record<string, any>>(obj: T): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    const val = obj[key];
+    if (val !== undefined) {
+      if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+        result[key] = cleanFirestoreObject(val);
+      } else {
+        result[key] = val;
+      }
+    }
+  }
+  return result;
+}
+
 // Validation helper for test connection
 export async function testConnection() {
   if (!auth.currentUser) return false;

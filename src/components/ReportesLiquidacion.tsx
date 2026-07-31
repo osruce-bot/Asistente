@@ -278,15 +278,24 @@ export default function ReportesLiquidacion({
 
   const executeLiquidation = () => {
     if (!confirmLiquidation) return;
-    const { asistente, citas: closedCitas, sueldo, bonos } = confirmLiquidation;
-    const ids = closedCitas.map(c => c.id);
-    onLiquidateAppointments(asistente.id, selectedMonth, ids, sueldo, bonos, liqMontoAdelanto, liqReciboAdelanto);
-    setConfirmLiquidation(null);
-    setNotification({
-      message: `¡Liquidación registrada de forma exitosa para ${asistente.nombreCompleto}!`,
-      type: 'success'
-    });
-    setTimeout(() => setNotification(null), 4000);
+    try {
+      const { asistente, citas: closedCitas, sueldo, bonos } = confirmLiquidation;
+      const ids = closedCitas.map(c => c.id);
+      onLiquidateAppointments(asistente.id, selectedMonth, ids, sueldo, bonos, liqMontoAdelanto, liqReciboAdelanto);
+      setConfirmLiquidation(null);
+      setNotification({
+        message: `¡Liquidación registrada de forma exitosa para ${asistente.nombreCompleto}!`,
+        type: 'success'
+      });
+      setTimeout(() => setNotification(null), 4000);
+    } catch (err) {
+      console.error('Error al liquidar planilla:', err);
+      setNotification({
+        message: 'Ocurrió un inconveniente al procesar la liquidación. Inténtalo de nuevo.',
+        type: 'error'
+      });
+      setTimeout(() => setNotification(null), 5000);
+    }
   };
 
   // Generate Receipt Modal view

@@ -24,7 +24,11 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('Uncaught Error in React Component Tree:', error, errorInfo);
   }
 
-  private handleReset = () => {
+  private handleSoftRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  private handleReload = () => {
     this.setState({ hasError: false, error: null });
     window.location.reload();
   };
@@ -53,14 +57,25 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={this.handleReset}
-              className="w-full py-3 px-4 bg-[#007AFF] hover:bg-[#0062cc] text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Recargar y Restablecer Pantalla
-            </button>
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                type="button"
+                onClick={this.handleSoftRetry}
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Reintentar vista sin salir
+              </button>
+
+              <button
+                type="button"
+                onClick={this.handleReload}
+                className="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-600"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Recargar y Restablecer Pantalla
+              </button>
+            </div>
           </div>
         </div>
       );

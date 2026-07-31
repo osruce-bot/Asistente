@@ -36,6 +36,7 @@ import {
   db, 
   getGoogleProvider, 
   handleFirestoreError, 
+  cleanFirestoreObject,
   OperationType,
   testConnection
 } from './lib/firebase';
@@ -233,7 +234,10 @@ const DEFAULT_CONFIG: ConfigGeneral = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
-  const [userRole, setUserRole] = useState<'admin' | 'asistente' | null>(null);
+  const [userRole, setUserRole] = useState<'admin' | 'asistente' | null>(() => {
+    const saved = sessionStorage.getItem('remax_user_role');
+    return (saved === 'admin' || saved === 'asistente') ? saved : null;
+  });
   const [asistentes, setAsistentes] = useState<Asistente[]>([]);
   const [citas, setCitas] = useState<Cita[]>([]);
   const [config, setConfig] = useState<ConfigGeneral>(DEFAULT_CONFIG);
@@ -246,25 +250,9 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [logoutModalOpen, setLogoutModalOpen] = useState<boolean>(false);
-  const [unlockedProfileName, setUnlockedProfileName] = useState<string>('');
-
-  // Strict session security: Clear session storage on unload/page close to force credential login on return
-  useEffect(() => {
-    const clearSession = () => {
-      sessionStorage.removeItem('remax_user_role');
-      sessionStorage.removeItem('remax_profile_name');
-    };
-
-    clearSession(); // Always force fresh lock on initial app load
-
-    window.addEventListener('beforeunload', clearSession);
-    window.addEventListener('pagehide', clearSession);
-
-    return () => {
-      window.removeEventListener('beforeunload', clearSession);
-      window.removeEventListener('pagehide', clearSession);
-    };
-  }, []);
+  const [unlockedProfileName, setUnlockedProfileName] = useState<string>(() => {
+    return sessionStorage.getItem('remax_profile_name') || '';
+  });
 
   // Clean up any potential leftover dark class
   useEffect(() => {
@@ -715,10 +703,10 @@ export default function App() {
         setIsSyncing(true);
         const batch = writeBatch(db);
         const docRef = doc(db, 'liquidaciones', liq.id);
-        batch.set(docRef, { ...liq, ownerId: WORKSPACE_ID });
+        batch.set(docRef, cleanFirestoreObject({ ...liq, ownerId: WORKSPACE_ID }));
         if (newAuditRecord) {
           const auditDocRef = doc(db, 'audit_logs', newAuditRecord.id);
-          batch.set(auditDocRef, { ...newAuditRecord, ownerId: WORKSPACE_ID });
+          batch.set(auditDocRef, cleanFirestoreObject({ ...newAuditRecord, ownerId: WORKSPACE_ID }));
         }
         await batch.commit();
       } catch (err) {
@@ -773,7 +761,7 @@ export default function App() {
       try {
         setIsSyncing(true);
         const docRef = doc(db, 'asistentes', as.id);
-        await setDoc(docRef, { ...as, ownerId: WORKSPACE_ID });
+        await setDoc(docRef, cleanFirestoreObject({ ...as, ownerId: WORKSPACE_ID }));
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, `asistentes/${as.id}`);
       } finally {
@@ -813,7 +801,7 @@ export default function App() {
       try {
         setIsSyncing(true);
         const docRef = doc(db, 'citas', cita.id);
-        await setDoc(docRef, { ...cita, ownerId: WORKSPACE_ID });
+        await setDoc(docRef, cleanFirestoreObject({ ...cita, ownerId: WORKSPACE_ID }));
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, `citas/${cita.id}`);
       } finally {
@@ -848,7 +836,7 @@ export default function App() {
       try {
         setIsSyncing(true);
         const docRef = doc(db, 'config_general', WORKSPACE_ID);
-        await setDoc(docRef, { ...newConfig, ownerId: WORKSPACE_ID });
+        await setDoc(docRef, cleanFirestoreObject({ ...newConfig, ownerId: WORKSPACE_ID }));
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, `config_general/${WORKSPACE_ID}`);
       } finally {
@@ -886,6 +874,7 @@ export default function App() {
     // 2. Generate liquidation object
     const liqId = `liq-${asistenteId}-${mes}`;
     const targetAsistente = asistentes.find(as => as.id === asistenteId);
+    const existingLiq = liquidaciones.find(l => l.id === liqId);
     
     const logRecord: LiquidacionMensual = {
       id: liqId,
@@ -896,6 +885,7 @@ export default function App() {
       totalBonos: bonos,
       montoAdelantoQuincena: valAdelanto,
       reciboAdelantoEntregado: valReciboAdelanto,
+      fechaPagoAdelanto: existingLiq?.fechaPagoAdelanto || new Date().toISOString().split('T')[0],
       montoTotal: sueldo + bonos - valAdelanto,
       fechaPago: new Date().toISOString().split('T')[0],
       estado: 'PAGADO',
@@ -903,7 +893,7 @@ export default function App() {
       banco: targetAsistente?.banco || '--',
       numeroCuenta: targetAsistente?.numeroCuenta || '--',
       cci: targetAsistente?.cci || '--',
-      reciboHonorariosEntregado: false
+      reciboHonorariosEntregado: existingLiq?.reciboHonorariosEntregado || false
     };
 
     const updatedLiqs = [logRecord, ...liquidaciones.filter(l => l.id !== liqId)];
@@ -936,15 +926,15 @@ export default function App() {
           const matchingCita = updatedCitas.find(c => c.id === id);
           if (matchingCita) {
             const docRef = doc(db, 'citas', id);
-            batch.set(docRef, { ...matchingCita, ownerId: WORKSPACE_ID });
+            batch.set(docRef, cleanFirestoreObject({ ...matchingCita, ownerId: WORKSPACE_ID }));
           }
         });
 
         const liqDocRef = doc(db, 'liquidaciones', liqId);
-        batch.set(liqDocRef, { ...logRecord, ownerId: WORKSPACE_ID });
+        batch.set(liqDocRef, cleanFirestoreObject({ ...logRecord, ownerId: WORKSPACE_ID }));
 
         const auditDocRef = doc(db, 'audit_logs', auditId);
-        batch.set(auditDocRef, { ...newAuditRecord, ownerId: WORKSPACE_ID });
+        batch.set(auditDocRef, cleanFirestoreObject({ ...newAuditRecord, ownerId: WORKSPACE_ID }));
 
         await batch.commit();
 
@@ -1007,13 +997,13 @@ export default function App() {
           const matchingCita = updatedCitas.find(c => c.id === id);
           if (matchingCita) {
             const docRef = doc(db, 'citas', id);
-            batch.set(docRef, { ...matchingCita, ownerId: WORKSPACE_ID });
+            batch.set(docRef, cleanFirestoreObject({ ...matchingCita, ownerId: WORKSPACE_ID }));
           }
         });
 
         // Save audit log
         const auditDocRef = doc(db, 'audit_logs', auditId);
-        batch.set(auditDocRef, { ...newAuditRecord, ownerId: WORKSPACE_ID });
+        batch.set(auditDocRef, cleanFirestoreObject({ ...newAuditRecord, ownerId: WORKSPACE_ID }));
 
         await batch.commit();
       } catch (err) {
