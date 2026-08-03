@@ -1,55 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: Arial, "Helvetica Neue", sans-serif;
+  --font-mono: Arial, "Helvetica Neue", sans-serif;
   
-  /* Brand colors matching the requested palette */
-  --color-primary: #0554F2;     /* Intense premium blue */
-  --color-navy: #011640;        /* Deep navy */
-  --color-brand-red: #F20505;   /* Accent red */
-  --color-burgundy: #590202;    /* Deep burgundy */
-  --color-charcoal: #0D0D0D;    /* Midnight charcoal */
+  /* Brand colors matching the requested intense palette */
+  --color-primary: #004CE6;     /* Saturated intense blue */
+  --color-navy: #001233;        /* Deep midnight navy */
+  --color-brand-red: #E60000;   /* Vibrant intense red */
+  --color-burgundy: #590202;    /* Deep rich burgundy */
+  --color-charcoal: #080808;    /* Charcoal black */
 }
 
 /* Custom general styling overrides */
 body {
+  font-family: Arial, "Helvetica Neue", sans-serif !important;
   background-color: #f8fafc;
-  color: #0D0D0D;
+  color: #080808;
 }
 
 /* High Legibility classes based on brand colors */
 .bg-brand-gradient {
-  background: linear-gradient(135deg, #011640 0%, #0554F2 100%);
+  background: linear-gradient(135deg, #001233 0%, #004CE6 100%);
 }
 
 .text-navy {
-  color: #011640;
+  color: #001233;
 }
 
 .bg-navy {
-  background-color: #011640;
+  background-color: #001233;
 }
 
 .text-primary {
-  color: #0554F2;
+  color: #004CE6;
 }
 
 .bg-primary {
-  background-color: #0554F2;
+  background-color: #004CE6;
 }
 
 .border-primary {
-  border-color: #0554F2;
+  border-color: #004CE6;
 }
 
 .text-brand-red {
-  color: #F20505;
+  color: #E60000;
 }
 
 .bg-brand-red {
-  background-color: #F20505;
+  background-color: #E60000;
 }
 
 /* Scrollbars */
@@ -68,61 +68,61 @@ body {
   background: #94a3b8;
 }
 
-/* System-wide Class overrides to match the premium color palette exactly */
+/* System-wide Class overrides to match the intense color palette */
 .bg-indigo-600,
 .bg-indigo-650,
 .bg-indigo-700 {
-  background-color: #0554F2 !important;
+  background-color: #004CE6 !important;
 }
 
 .hover\:bg-indigo-700:hover,
 .hover\:bg-indigo-750:hover,
 .hover\:bg-indigo-800:hover {
-  background-color: #0443c2 !important; /* Slightly darker shade of primary blue */
+  background-color: #003bb8 !important;
 }
 
 .text-indigo-600,
 .text-indigo-700,
 .text-indigo-850,
 .text-indigo-800 {
-  color: #0554F2 !important;
+  color: #004CE6 !important;
 }
 
 .bg-indigo-50,
 .bg-indigo-50\/20,
 .bg-indigo-100 {
-  background-color: rgba(5, 84, 242, 0.08) !important;
-  border-color: rgba(5, 84, 242, 0.15) !important;
+  background-color: rgba(0, 76, 230, 0.1) !important;
+  border-color: rgba(0, 76, 230, 0.2) !important;
 }
 
-/* Red / Rose Mappings to #F20505 */
+/* Red / Rose Mappings to #E60000 */
 .text-rose-600,
 .text-red-650,
 .text-rose-700,
 .text-rose-800 {
-  color: #F20505 !important;
+  color: #E60000 !important;
 }
 
 .bg-rose-600,
 .bg-red-600,
 .bg-rose-700 {
-  background-color: #F20505 !important;
+  background-color: #E60000 !important;
 }
 
 .hover\:bg-rose-700:hover,
 .hover\:bg-rose-800:hover {
-  background-color: #c70404 !important;
+  background-color: #b30000 !important;
 }
 
 .bg-rose-100,
 .bg-rose-50,
 .bg-red-50 {
-  background-color: rgba(242, 5, 5, 0.08) !important;
-  color: #F20505 !important;
-  border-color: rgba(242, 5, 5, 0.15) !important;
+  background-color: rgba(230, 0, 0, 0.08) !important;
+  color: #E60000 !important;
+  border-color: rgba(230, 0, 0, 0.18) !important;
 }
 
-/* Deep Burgundy Mappings to #590202 */
+/* Deep Burgundy Mappings */
 .text-amber-950,
 .text-amber-900,
 .text-amber-850 {
@@ -136,19 +136,19 @@ body {
 
 .bg-amber-50,
 .bg-amber-100 {
-  background-color: rgba(89, 2, 2, 0.06) !important;
+  background-color: rgba(89, 2, 2, 0.08) !important;
   color: #590202 !important;
-  border-color: rgba(89, 2, 2, 0.15) !important;
+  border-color: rgba(89, 2, 2, 0.2) !important;
 }
 
-/* Midnight Charcoal Neutral Mappings to #0D0D0D */
+/* Neutral Mappings */
 .text-slate-900,
 .text-slate-950 {
-  color: #0D0D0D !important;
+  color: #080808 !important;
 }
 
 /* Clean UI items borders */
 .border-slate-200 {
-  border-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
 }
 
