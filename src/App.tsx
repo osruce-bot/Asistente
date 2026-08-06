@@ -1045,13 +1045,13 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col justify-between" id="app_root">
+    <div className="min-h-screen bg-[#0B1120] font-sans text-slate-100 flex flex-col justify-between" id="app_root">
       
       {/* Header & Tabs */}
       <div>
         
         {/* Top Navbar */}
-        <header className="bg-navy border-b border-navy/20 shadow-md">
+        <header className="bg-[#0B1120] border-b border-[#1E2D4A] shadow-md">
           <div className="w-full max-w-full px-4 sm:px-8 lg:px-12 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             
             {/* Logo */}
@@ -1062,10 +1062,10 @@ export default function App() {
               <div>
                 <div className="flex items-center gap-1.5">
                   <h1 className="text-base sm:text-lg font-bold tracking-tight text-white uppercase font-sans">
-                    OSCAR RUSSO <span className="text-blue-400">| RRHH & Citas</span>
+                    OSCAR RUSSO <span className="text-cyan-400">| RRHH & Citas</span>
                   </h1>
                 </div>
-                <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                   Control Operativo y Pago de Bonos de la Asistente
                 </p>
               </div>
@@ -1076,7 +1076,7 @@ export default function App() {
             <div className="flex items-center gap-3 text-xs text-slate-200">
               
               {/* Active Role status badge & Lock button */}
-              <div className="flex items-center gap-2 bg-slate-850/80 border border-slate-750 py-1.5 px-3 rounded-md shadow-sm">
+              <div className="flex items-center gap-2 bg-[#111A2E] border border-[#1E2D4A] py-1.5 px-3 rounded-md shadow-sm">
                 <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold">
                   {(unlockedProfileName || 'O')[0].toUpperCase()}
                 </div>
@@ -1084,7 +1084,7 @@ export default function App() {
                   <span className="font-bold text-[10px] text-white leading-none truncate max-w-[120px]">
                     {unlockedProfileName || (userRole === 'admin' ? "Oscar Russo" : "Asistente")}
                   </span>
-                  <span className="text-[8px] font-mono text-blue-400 flex items-center gap-0.5 mt-0.5 font-bold uppercase tracking-wider">
+                  <span className="text-[8px] font-mono text-cyan-400 flex items-center gap-0.5 mt-0.5 font-bold uppercase tracking-wider">
                     <Cloud className="w-2.5 h-2.5 text-emerald-400" />
                     {isSyncing ? "Sincronizando..." : "Nube Activa"}
                   </span>
@@ -1101,7 +1101,7 @@ export default function App() {
                 <button
                   onClick={handleLogout}
                   title="Cerrar sesión de perfil"
-                  className="ml-2 text-[9px] font-bold text-slate-300 hover:text-brand-red uppercase bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1"
+                  className="ml-2 text-[9px] font-bold text-slate-300 hover:text-rose-400 uppercase bg-[#1E2D4A] hover:bg-rose-950/40 px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1 border border-slate-700/50"
                 >
                   <Lock className="w-3 h-3" />
                   <span>Salir</span>
@@ -1113,7 +1113,7 @@ export default function App() {
         </header>
 
         {/* Navigation Tabs Bar */}
-        <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
+        <nav className="bg-[#0B1120]/95 border-b border-[#1E2D4A] shadow-lg sticky top-0 z-40 backdrop-blur-md">
           <div className="w-full max-w-full px-4 sm:px-8 lg:px-12">
             <div className="flex justify-between items-center h-14">
               
@@ -1126,8 +1126,8 @@ export default function App() {
                   onClick={() => setActiveTab('dashboard')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
                     activeTab === 'dashboard'
-                      ? 'bg-primary text-white border-primary shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-transparent'
+                      ? 'bg-primary text-white border-primary shadow-sm shadow-blue-500/20'
+                      : 'text-slate-300 hover:text-white hover:bg-[#111A2E] border-transparent'
                   }`}
                   id="tab_dashboard_btn"
                 >
@@ -1142,8 +1142,8 @@ export default function App() {
                     onClick={() => setActiveTab('asistentes')}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
                       activeTab === 'asistentes'
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-transparent'
+                        ? 'bg-primary text-white border-primary shadow-sm shadow-blue-500/20'
+                        : 'text-slate-300 hover:text-white hover:bg-[#111A2E] border-transparent'
                     }`}
                     id="tab_asistentes_btn"
                   >
@@ -1158,8 +1158,8 @@ export default function App() {
                   onClick={() => setActiveTab('registrar')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
                     activeTab === 'registrar'
-                      ? 'bg-primary text-white border-primary shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-transparent'
+                      ? 'bg-primary text-white border-primary shadow-sm shadow-blue-500/20'
+                      : 'text-slate-300 hover:text-white hover:bg-[#111A2E] border-transparent'
                   }`}
                   id="tab_registrar_btn"
                 >
@@ -1167,19 +1167,19 @@ export default function App() {
                   Nuevo Registro
                 </button>
 
-                {/* 4. Appointments Manager Tab (Prospectos) */}
+                {/* 4. Appointments Manager Tab (Registros) */}
                 <button
                   type="button"
                   onClick={() => setActiveTab('citas')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
                     activeTab === 'citas'
-                      ? 'bg-primary text-white border-primary shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-transparent'
+                      ? 'bg-primary text-white border-primary shadow-sm shadow-blue-500/20'
+                      : 'text-slate-300 hover:text-white hover:bg-[#111A2E] border-transparent'
                   }`}
                   id="tab_citas_btn"
                 >
                   <Users className="w-3.5 h-3.5" />
-                  Prospectos
+                  Registros
                 </button>
 
                 {/* 5. Calendar View Tab (Calendario de Citas) */}
@@ -1188,8 +1188,8 @@ export default function App() {
                   onClick={() => setActiveTab('calendario')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
                     activeTab === 'calendario'
-                      ? 'bg-primary text-white border-primary shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-transparent'
+                      ? 'bg-primary text-white border-primary shadow-sm shadow-blue-500/20'
+                      : 'text-slate-300 hover:text-white hover:bg-[#111A2E] border-transparent'
                   }`}
                   id="tab_calendario_btn"
                 >
@@ -1204,8 +1204,8 @@ export default function App() {
                     onClick={() => setActiveTab('liquidacion')}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
                       activeTab === 'liquidacion'
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-transparent'
+                        ? 'bg-primary text-white border-primary shadow-sm shadow-blue-500/20'
+                        : 'text-slate-300 hover:text-white hover:bg-[#111A2E] border-transparent'
                     }`}
                     id="tab_reports_btn"
                   >
@@ -1221,8 +1221,8 @@ export default function App() {
                     onClick={() => setActiveTab('config')}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border ${
                       activeTab === 'config'
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-transparent'
+                        ? 'bg-primary text-white border-primary shadow-sm shadow-blue-500/20'
+                        : 'text-slate-300 hover:text-white hover:bg-[#111A2E] border-transparent'
                     }`}
                     id="tab_config_btn"
                   >
@@ -1327,23 +1327,23 @@ export default function App() {
 
       {/* Logout Confirmation Dialog Modal */}
       {logoutModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-sm w-full border border-slate-200 shadow-xl overflow-hidden animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-[#111A2E] rounded-xl max-w-sm w-full border border-[#1E2D4A] shadow-2xl overflow-hidden animate-fade-in">
             <div className="p-5 space-y-3">
-              <div className="w-10 h-10 bg-blue-50 border border-primary/10 rounded-full flex items-center justify-center text-primary">
+              <div className="w-10 h-10 bg-cyan-500/10 border border-cyan-500/20 rounded-full flex items-center justify-center text-cyan-400">
                 <LogOut className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-slate-800 text-sm uppercase tracking-wider">Cerrar Sesión</h4>
-                <p className="text-xs text-slate-500 mt-1">
+                <h4 className="font-bold text-white text-sm uppercase tracking-wider">Cerrar Sesión</h4>
+                <p className="text-xs text-slate-300 mt-1">
                   ¿Confirmas que deseas salir? Los datos de planilla y citas continuarán seguros en la nube.
                 </p>
               </div>
             </div>
-            <div className="bg-slate-50 p-4 border-t border-slate-100 flex gap-2 justify-end">
+            <div className="bg-[#0B1120] p-4 border-t border-[#1E2D4A] flex gap-2 justify-end">
               <button
                 onClick={() => setLogoutModalOpen(false)}
-                className="px-3.5 py-1.5 text-xs font-bold uppercase text-slate-700 border border-slate-205 bg-white hover:bg-slate-50 rounded cursor-pointer"
+                className="px-3.5 py-1.5 text-xs font-bold uppercase text-slate-300 hover:text-white border border-[#2A3B5C] bg-[#111A2E] hover:bg-[#1E2D4A] rounded-lg cursor-pointer"
               >
                 Cancelar
               </button>
@@ -1360,7 +1360,7 @@ export default function App() {
                     setIsSyncing(false);
                   }, 300);
                 }}
-                className="px-3.5 py-1.5 text-xs font-bold uppercase text-white bg-primary hover:bg-primary/95 rounded cursor-pointer"
+                className="px-3.5 py-1.5 text-xs font-bold uppercase text-white bg-primary hover:bg-primary/90 rounded-lg cursor-pointer shadow-md shadow-blue-500/20"
               >
                 Cerrar Sesión
               </button>

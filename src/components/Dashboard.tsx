@@ -135,13 +135,17 @@ export default function Dashboard({
 
   // Appointment states
   const citasAgendadas = filteredCitas.filter(c => c.estadoCita === EstadoCita.AGENDADA).length;
-  // Citas Logradas / Ejecutadas
+  // Citas Logradas / Ejecutadas / Captación en Trámite (Unificadas)
   const citasRealizadas = filteredCitas.filter(
-    c => c.estadoCita === EstadoCita.REALIZADA || c.estadoCierre === EstadoCierre.CERRADO || c.estadoCierre === EstadoCierre.LIQUIDADO
+    c => c.estadoCita === EstadoCita.REALIZADA || 
+         c.estadoCierre === EstadoCierre.CERRADO || 
+         c.estadoCierre === EstadoCierre.LIQUIDADO || 
+         c.estadoCierre === EstadoCierre.CAPTACION_EN_TRAMITE
   ).length;
   const citasCanceladas = filteredCitas.filter(c => c.estadoCita === EstadoCita.CANCELADA || c.estadoCita === EstadoCita.REPROGRAMAR).length;
   
   // Cierre states
+  const captacionesEnTramite = filteredCitas.filter(c => c.estadoCierre === EstadoCierre.CAPTACION_EN_TRAMITE).length;
   const cierresConcretados = filteredCitas.filter(c => c.estadoCierre === EstadoCierre.CERRADO || c.estadoCierre === EstadoCierre.LIQUIDADO).length;
   const cierresPendientes = filteredCitas.filter(c => c.estadoCierre === EstadoCierre.PENDIENTE).length;
   
@@ -237,19 +241,50 @@ export default function Dashboard({
     { name: 'Sin objeciones registradas', value: 1, color: '#64748B', pct: '100.0', unitLabel: 'registros' }
   ];
 
-  // Calculate Monthly Trend Data (Last 6 Months) for the Area Chart
+  // Calculate Monthly Trend Data starting from July 2026 for the Area Chart
   const monthsMap: Record<string, { monthKey: string; monthLabel: string; llamadas: number; citas: number }> = {};
+  const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+  
+  // Start timeline specifically from July 2026 (2026-07)
+  const startYear = 2026;
+  const startMonth = 6; // 0-indexed for July
+  
   const now = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const mStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-    monthsMap[mStr] = {
-      monthKey: mStr,
-      monthLabel: `${monthNames[d.getMonth()]} ${d.getFullYear().toString().slice(2)}`,
+  let endYear = Math.max(startYear, now.getFullYear());
+  let endMonth = endYear === startYear ? Math.max(11, now.getMonth()) : now.getMonth();
+  
+  // Extend end date if there are appointments registered in future months
+  citas.forEach(c => {
+    const dateStr = c.fechaLlamada || c.fechaCita;
+    if (dateStr && dateStr.length >= 7) {
+      const [yStr, mStr] = dateStr.slice(0, 7).split('-');
+      const y = parseInt(yStr, 10);
+      const m = parseInt(mStr, 10) - 1;
+      if (!isNaN(y) && !isNaN(m)) {
+        if (y > endYear || (y === endYear && m > endMonth)) {
+          endYear = y;
+          endMonth = m;
+        }
+      }
+    }
+  });
+
+  // Build monthly slots from July 2026 onwards
+  let currY = startYear;
+  let currM = startMonth;
+  while (currY < endYear || (currY === endYear && currM <= endMonth)) {
+    const mKey = `${currY}-${String(currM + 1).padStart(2, '0')}`;
+    monthsMap[mKey] = {
+      monthKey: mKey,
+      monthLabel: `${monthNames[currM]} ${currY.toString().slice(2)}`,
       llamadas: 0,
       citas: 0
     };
+    currM++;
+    if (currM > 11) {
+      currM = 0;
+      currY++;
+    }
   }
 
   citas.forEach(c => {
@@ -258,7 +293,7 @@ export default function Dashboard({
       const mStr = dateStr.slice(0, 7);
       if (monthsMap[mStr]) {
         if (c.fechaLlamada) monthsMap[mStr].llamadas++;
-        if (c.estadoCita === EstadoCita.REALIZADA || c.estadoCierre === EstadoCierre.CERRADO || c.estadoCierre === EstadoCierre.LIQUIDADO) {
+        if (c.estadoCita === EstadoCita.REALIZADA || c.estadoCierre === EstadoCierre.CERRADO || c.estadoCierre === EstadoCierre.LIQUIDADO || c.estadoCierre === EstadoCierre.CAPTACION_EN_TRAMITE) {
           monthsMap[mStr].citas++;
         }
       }
@@ -413,7 +448,7 @@ export default function Dashboard({
           onClick={() => onNavigateToTab('citas')}
           className="bg-[#111A2E] p-4 rounded-xl border border-[#1E2D4A] shadow-lg flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:border-cyan-500/60 hover:shadow-cyan-500/10 cursor-pointer group"
         >
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">CITAS EJECUTADAS</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">CITAS EJECUTADAS / EN TRÁMITE</span>
           <div className="my-2">
             <span className="text-3xl md:text-4xl font-extrabold text-emerald-400 font-mono block tracking-tight">
               {citasRealizadas}
@@ -487,7 +522,7 @@ export default function Dashboard({
                 <p className="text-xs text-slate-400 font-medium mt-0.5">Evolución mensual de llamadas y citas agendadas</p>
               </div>
               <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/80 border border-cyan-800/80 px-2.5 py-1 rounded-lg">
-                {filterMonth ? `Mes: ${filterMonth}` : 'Tendencia 6 Meses'}
+                {filterMonth ? `Mes: ${filterMonth}` : 'Desde Julio 2026'}
               </span>
             </div>
 
@@ -604,7 +639,7 @@ export default function Dashboard({
                 </span>
               </div>
 
-              <div className="space-y-3 my-2 flex-1 overflow-y-auto max-h-[220px] pr-1 scrollbar-thin">
+              <div className="space-y-2.5 my-2 flex-1 pr-1">
                 {motivosStats.length === 0 ? (
                   <p className="text-slate-500 italic text-xs py-4 text-center">No hay objeciones registradas en este período.</p>
                 ) : (
@@ -613,8 +648,8 @@ export default function Dashboard({
                     return (
                       <div key={item.motivo} className="space-y-1">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-300 truncate max-w-[170px] font-medium">{item.motivo}</span>
-                          <span className="font-mono text-cyan-400 font-bold">{item.count} <span className="text-slate-500 font-normal">({item.percentage}%)</span></span>
+                          <span className="text-slate-300 font-medium">{item.motivo}</span>
+                          <span className="font-mono text-cyan-400 font-bold ml-2 shrink-0">{item.count} <span className="text-slate-500 font-normal">({item.percentage}%)</span></span>
                         </div>
                         <div className="w-full h-2 bg-[#18233C] rounded-full overflow-hidden">
                           <div 
@@ -667,24 +702,26 @@ export default function Dashboard({
               {/* Funnel Stage 2 */}
               <div 
                 onClick={() => onNavigateToTab('citas')}
-                className="w-[88%] bg-gradient-to-r from-cyan-600 to-teal-500 p-2.5 rounded-lg text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg group relative overflow-hidden"
+                className="w-[90%] bg-gradient-to-r from-cyan-600 to-teal-500 p-2.5 rounded-lg text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg group relative overflow-hidden"
               >
                 <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-950">2. CITAS AGENDADAS</div>
                 <div className="text-lg font-black font-mono text-white mt-0.5">{citasAgendadas}</div>
                 <div className="text-[10px] font-bold text-slate-900 group-hover:underline">VER AGENDA →</div>
               </div>
 
-              {/* Funnel Stage 3 */}
+              {/* Funnel Stage 3 - Citas Ejecutadas / Captación en Trámite Unificadas */}
               <div 
                 onClick={() => onNavigateToTab('citas')}
-                className="w-[76%] bg-gradient-to-r from-teal-600 to-emerald-500 p-2.5 rounded-lg text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg group relative overflow-hidden"
+                className="w-[78%] bg-gradient-to-r from-teal-600 via-cyan-600 to-emerald-500 p-2.5 rounded-lg text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg group relative overflow-hidden"
               >
-                <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-950">3. CITAS EJECUTADAS</div>
+                <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-950">3. CITAS EJECUTADAS / CAPTACIÓN EN TRÁMITE</div>
                 <div className="text-lg font-black font-mono text-white mt-0.5">{citasRealizadas}</div>
-                <div className="text-[10px] font-bold text-slate-900 group-hover:underline">{ratioLlamadasCitas}% CONVERSIÓN →</div>
+                <div className="text-[10px] font-bold text-slate-900 group-hover:underline">
+                  {ratioLlamadasCitas}% CONVERSIÓN ({captacionesEnTramite} EN TRÁMITE) →
+                </div>
               </div>
 
-              {/* Funnel Stage 4 */}
+              {/* Funnel Stage 4 - Captaciones Cerradas */}
               <div 
                 onClick={() => onNavigateToTab('citas')}
                 className="w-[64%] bg-gradient-to-r from-emerald-600 to-amber-500 p-2.5 rounded-lg text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg group relative overflow-hidden"
@@ -694,10 +731,10 @@ export default function Dashboard({
                 <div className="text-[10px] font-bold text-slate-900 group-hover:underline">{ratioCitasCierres}% DE CITAS →</div>
               </div>
 
-              {/* Funnel Stage 5 */}
+              {/* Funnel Stage 5 - Bonos Generados */}
               <div 
                 onClick={() => onNavigateToTab(userRole === 'admin' ? 'liquidacion' : 'citas')}
-                className="w-[52%] bg-gradient-to-r from-amber-500 to-purple-600 p-2.5 rounded-lg text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg group relative overflow-hidden"
+                className="w-[50%] bg-gradient-to-r from-amber-500 to-purple-600 p-2.5 rounded-lg text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-lg group relative overflow-hidden"
               >
                 <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-950">5. BONOS GENERADOS</div>
                 <div className="text-base font-black font-mono text-white mt-0.5 truncate">{formatPEN(totalBonosGenerados)}</div>

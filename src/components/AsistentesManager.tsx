@@ -286,7 +286,7 @@ export default function AsistentesManager({
                     placeholder="Ej. María Fernanda Morales"
                     value={nombreCompleto}
                     onChange={(e) => setNombreCompleto(capitalizeWords(e.target.value))}
-                    className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 font-medium"
+                    className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 font-medium capitalize"
                   />
                 </div>
 
@@ -347,7 +347,7 @@ export default function AsistentesManager({
                     placeholder="Ej. Asistente de Captaciones"
                     value={cargo}
                     onChange={(e) => setCargo(capitalizeWords(e.target.value))}
-                    className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900"
+                    className="block w-full py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 capitalize"
                   />
                 </div>
 
@@ -420,7 +420,7 @@ export default function AsistentesManager({
                         placeholder="Sueldo, Ahorros..."
                         value={tipoCuenta}
                         onChange={(e) => setTipoCuenta(capitalizeWords(e.target.value))}
-                        className="block w-full py-1.5 px-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none text-slate-900"
+                        className="block w-full py-1.5 px-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none text-slate-900 capitalize"
                       />
                     </div>
                   </div>
@@ -499,8 +499,8 @@ export default function AsistentesManager({
                 type="text"
                 placeholder="Buscar colaborador por nombre, DNI, cargo o banco..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-3 py-2 w-full text-xs bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder-slate-400 text-slate-800 font-medium"
+                onChange={(e) => setSearchTerm(capitalizeWords(e.target.value))}
+                className="pl-9 pr-3 py-2 w-full text-xs bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder-slate-400 text-slate-800 font-medium capitalize"
               />
             </div>
             

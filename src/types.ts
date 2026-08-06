@@ -29,6 +29,7 @@ export enum EstadoCita {
 }
 
 export enum EstadoCierre {
+  CAPTACION_EN_TRAMITE = 'CAPTACION_EN_TRAMITE',
   PENDIENTE = 'PENDIENTE',
   EN_SEGUIMIENTO = 'EN_SEGUIMIENTO',
   DESCARTADO = 'DESCARTADO',

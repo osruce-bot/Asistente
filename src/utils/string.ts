@@ -13,7 +13,7 @@ export function capitalizeWords(str?: string | null): string {
     .split(/(\s+)/)
     .map((part) => {
       if (/^\s+$/.test(part)) return part;
-      return part.charAt(0).toUpperCase() + part.slice(1);
+      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
     })
     .join('');
 }

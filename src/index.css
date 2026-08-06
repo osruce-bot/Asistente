@@ -13,15 +13,19 @@
 }
 
 /* Custom general styling overrides */
+html {
+  font-size: 106.25%; /* Ligeramente más grande (17px base) */
+}
+
 body {
   font-family: Arial, "Helvetica Neue", sans-serif !important;
-  background-color: #f8fafc;
-  color: #080808;
+  background-color: #0B1120;
+  color: #f8fafc;
 }
 
 /* High Legibility classes based on brand colors */
 .bg-brand-gradient {
-  background: linear-gradient(135deg, #001233 0%, #004CE6 100%);
+  background: linear-gradient(135deg, #0B1120 0%, #004CE6 100%);
 }
 
 .text-navy {
@@ -29,11 +33,11 @@ body {
 }
 
 .bg-navy {
-  background-color: #001233;
+  background-color: #0B1120;
 }
 
 .text-primary {
-  color: #004CE6;
+  color: #38bdf8;
 }
 
 .bg-primary {
@@ -45,7 +49,7 @@ body {
 }
 
 .text-brand-red {
-  color: #E60000;
+  color: #f87171;
 }
 
 .bg-brand-red {
@@ -58,97 +62,13 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #0B1120;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #1E2D4A;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* System-wide Class overrides to match the intense color palette */
-.bg-indigo-600,
-.bg-indigo-650,
-.bg-indigo-700 {
-  background-color: #004CE6 !important;
-}
-
-.hover\:bg-indigo-700:hover,
-.hover\:bg-indigo-750:hover,
-.hover\:bg-indigo-800:hover {
-  background-color: #003bb8 !important;
-}
-
-.text-indigo-600,
-.text-indigo-700,
-.text-indigo-850,
-.text-indigo-800 {
-  color: #004CE6 !important;
-}
-
-.bg-indigo-50,
-.bg-indigo-50\/20,
-.bg-indigo-100 {
-  background-color: rgba(0, 76, 230, 0.1) !important;
-  border-color: rgba(0, 76, 230, 0.2) !important;
-}
-
-/* Red / Rose Mappings to #E60000 */
-.text-rose-600,
-.text-red-650,
-.text-rose-700,
-.text-rose-800 {
-  color: #E60000 !important;
-}
-
-.bg-rose-600,
-.bg-red-600,
-.bg-rose-700 {
-  background-color: #E60000 !important;
-}
-
-.hover\:bg-rose-700:hover,
-.hover\:bg-rose-800:hover {
-  background-color: #b30000 !important;
-}
-
-.bg-rose-100,
-.bg-rose-50,
-.bg-red-50 {
-  background-color: rgba(230, 0, 0, 0.08) !important;
-  color: #E60000 !important;
-  border-color: rgba(230, 0, 0, 0.18) !important;
-}
-
-/* Deep Burgundy Mappings */
-.text-amber-950,
-.text-amber-900,
-.text-amber-850 {
-  color: #590202 !important;
-}
-
-.border-amber-300,
-.border-amber-200 {
-  border-color: #590202 !important;
-}
-
-.bg-amber-50,
-.bg-amber-100 {
-  background-color: rgba(89, 2, 2, 0.08) !important;
-  color: #590202 !important;
-  border-color: rgba(89, 2, 2, 0.2) !important;
-}
-
-/* Neutral Mappings */
-.text-slate-900,
-.text-slate-950 {
-  color: #080808 !important;
-}
-
-/* Clean UI items borders */
-.border-slate-200 {
-  border-color: #cbd5e1 !important;
+  background: #2A3B5C;
 }
 

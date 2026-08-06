@@ -76,19 +76,19 @@ export default function LockScreen({
   const activeProfile = profiles.find(p => p.id === selectedProfileId);
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 md:p-8" id="lock_screen_root">
-      <div className="max-w-md w-full bg-white rounded-lg border border-slate-200 shadow-xl overflow-hidden animate-fade-in">
+    <div className="min-h-screen bg-[#0B1120] flex items-center justify-center p-4 sm:p-6 md:p-8" id="lock_screen_root">
+      <div className="max-w-md w-full bg-[#111A2E] rounded-2xl border border-[#1E2D4A] shadow-2xl overflow-hidden animate-fade-in">
         
         {/* Banner header */}
-        <div className="p-6 bg-navy text-white text-center space-y-3 relative">
-          <div className="mx-auto w-12 h-12 bg-primary rounded-md flex items-center justify-center shadow-lg">
+        <div className="p-6 bg-[#0B1120] text-white text-center space-y-3 relative border-b border-[#1E2D4A]">
+          <div className="mx-auto w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Building2 className="w-6 h-6 text-white" />
           </div>
           <div className="space-y-1">
             <h1 className="text-base font-bold tracking-tight uppercase">
-              REMAX POWER EXPO <span className="text-blue-400">| RRHH & CITAS</span>
+              REMAX POWER EXPO <span className="text-cyan-400">| RRHH & CITAS</span>
             </h1>
-            <p className="text-[10px] text-slate-300 font-semibold tracking-wider uppercase">
+            <p className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
               Portal de Acceso Autorizado
             </p>
           </div>
@@ -96,23 +96,23 @@ export default function LockScreen({
 
         {/* Sync Status Banner */}
         {cloudSyncError ? (
-          <div className="bg-amber-50 px-5 py-3 border-b border-amber-200 flex flex-col gap-1 text-[10px] text-amber-800 animate-fade-in">
+          <div className="bg-amber-950/30 px-5 py-3 border-b border-amber-500/20 flex flex-col gap-1 text-[10px] text-amber-300 animate-fade-in">
             <div className="flex items-center gap-1.5 font-bold uppercase">
               <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse shrink-0" />
               <span>Sincronización Limitada (Local)</span>
             </div>
-            <p className="text-slate-600 leading-normal font-medium">
+            <p className="text-slate-300 leading-normal font-medium">
               {cloudSyncError}
             </p>
           </div>
         ) : (
-          <div className="bg-slate-50 px-5 py-2.5 border-b border-slate-200 flex items-center justify-between text-xs text-slate-500">
+          <div className="bg-[#0B1120]/60 px-5 py-2.5 border-b border-[#1E2D4A] flex items-center justify-between text-xs text-slate-400">
             <div className="flex items-center gap-1.5 text-[10px]">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="font-semibold text-slate-600">Base de datos en la nube activa (Firestore)</span>
+              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              <span className="font-semibold text-slate-300">Base de datos en la nube activa (Firestore)</span>
             </div>
             {isSyncing && (
-              <span className="text-[9px] font-bold text-primary animate-pulse uppercase">Sincronizando...</span>
+              <span className="text-[9px] font-bold text-cyan-400 animate-pulse uppercase">Sincronizando...</span>
             )}
           </div>
         )}
@@ -120,24 +120,24 @@ export default function LockScreen({
         <div className="p-6 space-y-6">
           
           {errorMsg && (
-            <div className="p-3.5 bg-red-50 border border-brand-red/10 rounded-md text-brand-red flex items-start gap-2.5 text-xs font-semibold animate-fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="p-3.5 bg-rose-950/40 border border-rose-500/30 rounded-lg text-rose-300 flex items-start gap-2.5 text-xs font-semibold animate-fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           <form onSubmit={handleVerify} className="space-y-4">
             
-            <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-md flex items-start gap-2.5 text-[10px] text-slate-700 font-medium">
-              <Shield className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <div className="p-3 bg-cyan-950/30 border border-cyan-500/20 rounded-xl flex items-start gap-2.5 text-[10px] text-slate-300 font-medium">
+              <Shield className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
               <p className="leading-snug">
-                <strong className="font-bold text-slate-800">Seguridad de Sesión Activa:</strong> Por protección de datos confidenciales de RE/MAX Power Expo, al cerrar la página o navegador la sesión se bloqueará automáticamente y se requerirá ingresar clave nuevamente.
+                <strong className="font-bold text-white">Seguridad de Sesión Activa:</strong> Por protección de datos confidenciales de RE/MAX Power Expo, al cerrar la página o navegador la sesión se bloqueará automáticamente y se requerirá ingresar clave nuevamente.
               </p>
             </div>
 
             {/* Account select field */}
             <div className="space-y-2">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Seleccione su Usuario / Perfil
               </label>
               <div className="relative">
@@ -149,7 +149,7 @@ export default function LockScreen({
                     setPasswordInput('');
                   }}
                   required
-                  className="block w-full px-3 py-2.5 bg-white border border-slate-200 rounded-md text-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary cursor-pointer"
+                  className="block w-full px-3 py-2.5 bg-[#0B1120] border border-[#2A3B5C] rounded-lg text-white text-xs font-semibold focus:outline-none focus:border-cyan-400 cursor-pointer"
                 >
                   <option value="">-- Elija su cuenta autorizada --</option>
                   {profiles.map((p) => (
@@ -162,14 +162,14 @@ export default function LockScreen({
             </div>
 
             {/* Password input box */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-md space-y-3">
+            <div className="p-4 bg-[#0B1120]/80 border border-[#1E2D4A] rounded-xl space-y-3">
               <div className="flex items-center gap-2">
                 {activeProfile && activeProfile.rol === 'admin' ? (
-                  <Shield className="w-4 h-4 text-blue-600" />
+                  <Shield className="w-4 h-4 text-cyan-400" />
                 ) : (
-                  <Users className="w-4 h-4 text-emerald-600" />
+                  <Users className="w-4 h-4 text-emerald-400" />
                 )}
-                <label className="text-xs font-bold text-slate-700 uppercase">
+                <label className="text-xs font-bold text-slate-200 uppercase">
                   Contraseña de Seguridad
                 </label>
               </div>
@@ -185,7 +185,7 @@ export default function LockScreen({
                   placeholder="Ingrese contraseña asignada"
                   disabled={!selectedProfileId}
                   required
-                  className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 font-mono font-bold disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  className="block w-full pl-9 pr-3 py-2 text-sm bg-[#111A2E] border border-[#2A3B5C] rounded-lg focus:outline-none focus:border-cyan-400 text-white font-mono font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -193,7 +193,7 @@ export default function LockScreen({
             <button
               type="submit"
               disabled={!selectedProfileId}
-              className="w-full py-2.5 bg-primary hover:bg-primary/95 text-white rounded-md font-bold text-xs uppercase tracking-wider shadow transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <LockOpen className="w-4 h-4" />
               Ingresar al Sistema
@@ -205,39 +205,39 @@ export default function LockScreen({
           </form>
 
           {/* Google Cloud Backup Sync Option */}
-          <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
+          <div className="pt-4 border-t border-[#1E2D4A] mt-4 space-y-3">
             {user && !user.isAnonymous ? (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between">
+              <div className="p-3 bg-[#0B1120] border border-[#1E2D4A] rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Cloud className="w-4 h-4 text-blue-600 animate-pulse shrink-0" />
+                  <Cloud className="w-4 h-4 text-cyan-400 animate-pulse shrink-0" />
                   <div className="text-left">
                     <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Copia de Seguridad Activa</p>
-                    <p className="text-xs font-bold text-slate-700 truncate max-w-[170px] mt-0.5">{user.email}</p>
+                    <p className="text-xs font-bold text-white truncate max-w-[170px] mt-0.5">{user.email}</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={onGoogleLogout}
-                  className="flex items-center gap-1 text-[9px] text-slate-500 hover:text-red-600 font-bold uppercase tracking-wider bg-slate-200/50 hover:bg-slate-200 px-2 py-1 rounded transition-colors"
+                  className="flex items-center gap-1 text-[9px] text-slate-400 hover:text-rose-400 font-bold uppercase tracking-wider bg-[#1E2D4A] hover:bg-rose-950/40 px-2 py-1 rounded transition-colors"
                 >
                   <LogOut className="w-3 h-3" />
                   Desvincular
                 </button>
               </div>
             ) : (
-              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-md space-y-2">
-                <div className="flex items-start gap-2 text-[10px] text-amber-800 leading-relaxed">
-                  <Cloud className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="p-3 bg-amber-950/20 border border-amber-500/20 rounded-xl space-y-2">
+                <div className="flex items-start gap-2 text-[10px] text-amber-300 leading-relaxed">
+                  <Cloud className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <span>
-                    <strong className="font-bold">¿Deseas acceder desde Incógnito o evitar pérdida de datos?</strong> Inicia sesión con tu cuenta de Google para sincronizar tus contraseñas y citas guardadas en la nube.
+                    <strong className="font-bold text-amber-200">¿Deseas acceder desde Incógnito o evitar pérdida de datos?</strong> Inicia sesión con tu cuenta de Google para sincronizar tus contraseñas y citas guardadas en la nube.
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={onGoogleLogin}
-                  className="w-full py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-[10px] uppercase tracking-wider rounded shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full py-1.5 bg-[#1E2D4A] hover:bg-[#2A3B5C] text-white font-bold text-[10px] uppercase tracking-wider rounded-lg border border-[#2A3B5C] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <Cloud className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
+                  <Cloud className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
                   <span>Iniciar Sesión con Google</span>
                 </button>
               </div>
@@ -246,7 +246,7 @@ export default function LockScreen({
 
         </div>
 
-        <div className="bg-slate-50 p-4 text-center border-t border-slate-100">
+        <div className="bg-[#0B1120] p-4 text-center border-t border-[#1E2D4A]">
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
             REMAX POWER EXPO • LIMA, PERÚ
           </p>

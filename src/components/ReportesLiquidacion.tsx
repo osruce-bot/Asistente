@@ -28,6 +28,7 @@ import { Asistente, Cita, EstadoCierre, ConfigGeneral, LiquidacionMensual, Audit
 import { formatPEN } from '../utils/currency';
 import { exportCitasToPDF } from '../utils/export';
 import { formatToDDMMYYYY } from '../utils/date';
+import { capitalizeWords } from '../utils/string';
 
 interface ReportesLiquidacionProps {
   asistentes: Asistente[];
@@ -384,13 +385,13 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
     <div className="space-y-6 animate-fade-in" id="reportes_liquidacion_root">
       
       {/* Top filter and setup header bar */}
-      <div className="bg-white p-4 rounded-md border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4" id="payroll_filters">
+      <div className="bg-[#111A2E] p-4 rounded-md border border-[#1E2D4A] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4" id="payroll_filters">
         <div className="space-y-1">
-          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-tight flex items-center gap-1.5">
-            <Coins className="w-5 h-5 text-primary" />
+          <h3 className="text-sm font-bold text-slate-100 uppercase tracking-tight flex items-center gap-1.5">
+            <Coins className="w-5 h-5 text-blue-400" />
             Planilla Mensual y Liquidación de Bonos
           </h3>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             Filtra el mes de cierre para consolidar la Remuneración Mínima Vital (RMV) fija y liquidar los bonos por citas cerradas.
           </p>
         </div>
@@ -403,7 +404,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="py-1.5 px-3 text-xs bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary text-slate-800 font-bold font-mono"
+              className="py-1.5 px-3 text-xs bg-[#0B1120] border border-[#1E2D4A] rounded-md focus:outline-none focus:border-amber-500 text-slate-100 font-bold font-mono"
             />
           </div>
 
@@ -412,11 +413,11 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
             <select
               value={selectedAsistenteId}
               onChange={(e) => setSelectedAsistenteId(e.target.value)}
-              className="py-1.5 px-3 text-xs bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none text-slate-800"
+              className="py-1.5 px-3 text-xs bg-[#0B1120] border border-[#1E2D4A] rounded-md focus:outline-none focus:border-amber-500 text-slate-100"
             >
-              <option value="TODOS">Todos los colaboradores</option>
+              <option value="TODOS" className="bg-[#111A2E] text-slate-100">Todos los colaboradores</option>
               {activeAsistentes.map(as => (
-                <option key={as.id} value={as.id}>{as.nombreCompleto}</option>
+                <option key={as.id} value={as.id} className="bg-[#111A2E] text-slate-100">{as.nombreCompleto}</option>
               ))}
             </select>
           </div>
@@ -429,24 +430,24 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
         {/* Left Column: Payroll calculation rows */}
         <div className="lg:col-span-2 space-y-4">
           
-          <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden" id="payroll_table_card">
-            <div className="p-4 bg-navy border-b border-navy/20 text-white flex justify-between items-center">
+          <div className="bg-[#111A2E] rounded-md border border-[#1E2D4A] shadow-sm overflow-hidden" id="payroll_table_card">
+            <div className="p-4 bg-[#0B1120] border-b border-[#1E2D4A] text-white flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-blue-400" />
                 Resumen de Haberes - Periodo {selectedMonth}
               </span>
-              <span className="text-[10px] font-mono bg-navy/60 px-2 py-0.5 rounded border border-slate-600">
+              <span className="text-[10px] font-mono bg-[#1E2D4A] text-slate-300 px-2 py-0.5 rounded border border-slate-700">
                 PAGO NETO DE PLANILLA
               </span>
             </div>
 
             {payrollList.length === 0 ? (
-              <div className="p-10 text-center text-slate-500">
-                <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <div className="p-10 text-center text-slate-400">
+                <Users className="w-8 h-8 text-slate-500 mx-auto mb-2" />
                 <p className="text-xs font-semibold">No hay colaboradores activos registrados para este reporte.</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-[#1E2D4A]">
                 {payrollList.map(({ asistente, sueldoBasico, closedCitas, liquidatedCitas, pendingBonosAmount, liquidatedBonosAmount, totalPendingToPay, totalLiquidatedPaid }) => {
                   const hasPendingBonos = closedCitas.length > 0;
                   const totalBonosPeriod = pendingBonosAmount + liquidatedBonosAmount;
@@ -459,59 +460,59 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                   const netoFinal = grandTotalPeriod - registeredAdelanto;
 
                   return (
-                    <div key={asistente.id} className="p-4 hover:bg-slate-50 transition-colors space-y-3" id={`payroll_item_${asistente.id}`}>
+                    <div key={asistente.id} className="p-4 hover:bg-[#1E2D4A]/40 transition-colors space-y-3" id={`payroll_item_${asistente.id}`}>
                       {/* Name & Account Details */}
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                         <div>
-                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight">{asistente.nombreCompleto}</h4>
+                          <h4 className="text-xs font-bold text-white uppercase tracking-tight">{asistente.nombreCompleto}</h4>
                           <p className="text-[10px] text-slate-400 font-mono">DNI: {asistente.dni} • Cargo: {asistente.cargo}</p>
                         </div>
-                        <div className="text-right font-mono text-[10px] text-slate-500">
-                          <span className="font-bold text-slate-700">{asistente.banco} ({asistente.tipoCuenta})</span> • Cuenta: {asistente.numeroCuenta}
+                        <div className="text-right font-mono text-[10px] text-slate-400">
+                          <span className="font-bold text-slate-200">{asistente.banco} ({asistente.tipoCuenta})</span> • Cuenta: {asistente.numeroCuenta}
                           {asistente.cci && <div className="text-[9px] text-slate-400">CCI: {asistente.cci}</div>}
                         </div>
                       </div>
 
                       {/* Calculations Details Grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5 bg-slate-50 p-3 rounded-md border border-slate-200">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5 bg-[#0B1120] p-3 rounded-md border border-[#1E2D4A]">
                         {/* Fixed Salary RMV */}
                         <div>
                           <span className="text-[9px] uppercase font-bold text-slate-400 block">Sueldo Fijo (RMV)</span>
-                          <span className="text-xs font-mono font-bold text-slate-800">{formatPEN(sueldoBasico)}</span>
+                          <span className="text-xs font-mono font-bold text-slate-100">{formatPEN(sueldoBasico)}</span>
                         </div>
 
                         {/* Liquidated Bonos */}
                         <div>
-                          <span className="text-[9px] uppercase font-bold text-emerald-600 block">Bonos Liquidados</span>
-                          <span className="text-xs font-mono font-bold text-emerald-600">+{formatPEN(liquidatedBonosAmount)}</span>
+                          <span className="text-[9px] uppercase font-bold text-emerald-400 block">Bonos Liquidados</span>
+                          <span className="text-xs font-mono font-bold text-emerald-400">+{formatPEN(liquidatedBonosAmount)}</span>
                           <span className="text-[8px] text-slate-400 block font-sans">({liquidatedCitas.length} citas)</span>
                         </div>
 
                         {/* Pending Bonos */}
                         <div>
-                          <span className="text-[9px] uppercase font-bold text-primary block">Bonos Pendientes</span>
-                          <span className="text-xs font-mono font-bold text-primary">+{formatPEN(pendingBonosAmount)}</span>
+                          <span className="text-[9px] uppercase font-bold text-amber-400 block">Bonos Pendientes</span>
+                          <span className="text-xs font-mono font-bold text-amber-400">+{formatPEN(pendingBonosAmount)}</span>
                           <span className="text-[8px] text-slate-400 block font-sans">({closedCitas.length} citas cerradas)</span>
                         </div>
 
                         {/* Adelanto en Quincena - Interactive Input & Guardar */}
-                        <div className="space-y-1 bg-amber-50/80 p-2 rounded border border-amber-200/80">
+                        <div className="space-y-1 bg-amber-950/30 p-2 rounded border border-amber-800/40">
                           <div className="flex items-center justify-between">
-                            <span className="text-[9px] uppercase font-bold text-amber-800 block">Adelanto Quincena</span>
+                            <span className="text-[9px] uppercase font-bold text-amber-300 block">Adelanto Quincena</span>
                             {existingLiq?.montoAdelantoQuincena && existingLiq.montoAdelantoQuincena > 0 ? (
-                              <span className="text-[8px] font-bold text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded border border-emerald-300">
+                              <span className="text-[8px] font-bold text-emerald-300 bg-emerald-950/60 px-1 py-0.2 rounded border border-emerald-700/50">
                                 ✓ Registrado
                               </span>
                             ) : null}
                           </div>
 
                           <div className="flex items-center gap-1">
-                            <span className="text-xs font-mono font-bold text-amber-700">-</span>
+                            <span className="text-xs font-mono font-bold text-amber-400">-</span>
                             <input
                               type="number"
                               min="0"
                               step="0.01"
-                              className="w-full max-w-[85px] px-1.5 py-0.5 border border-amber-300 bg-white rounded text-xs font-mono font-bold text-amber-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                              className="w-full max-w-[85px] px-1.5 py-0.5 border border-amber-700/60 bg-[#0B1120] rounded text-xs font-mono font-bold text-amber-200 focus:ring-1 focus:ring-amber-500 focus:outline-none"
                               placeholder="0.00"
                               value={registeredAdelanto || ''}
                               onChange={(e) => {
@@ -533,7 +534,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                                   : !!existingLiq?.reciboAdelantoEntregado;
                                 handleSaveAdelanto(asistente, val, recibo);
                               }}
-                              className="px-2 py-0.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-0.5 cursor-pointer shadow-xs shrink-0"
+                              className="px-2 py-0.5 bg-amber-600 hover:bg-amber-500 text-white rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-0.5 cursor-pointer shadow-xs shrink-0"
                               title="Guardar adelanto de quincena en el sistema"
                             >
                               <Save className="w-2.5 h-2.5" />
@@ -546,7 +547,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                             <input
                               type="checkbox"
                               id={`rhe_checkbox_${asistente.id}`}
-                              className="rounded text-amber-600 focus:ring-amber-500 h-3 w-3 cursor-pointer"
+                              className="rounded text-amber-500 focus:ring-amber-500 h-3 w-3 cursor-pointer bg-[#0B1120] border-[#1E2D4A]"
                               checked={reciboAdelantoEntregado}
                               onChange={(e) => {
                                 const checked = e.target.checked;
@@ -560,7 +561,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                                 handleSaveAdelanto(asistente, val, checked);
                               }}
                             />
-                            <label htmlFor={`rhe_checkbox_${asistente.id}`} className="text-[8px] text-slate-600 font-medium cursor-pointer select-none whitespace-nowrap">
+                            <label htmlFor={`rhe_checkbox_${asistente.id}`} className="text-[8px] text-slate-300 font-medium cursor-pointer select-none whitespace-nowrap">
                               RHe Quincena
                             </label>
                           </div>
@@ -568,8 +569,8 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
 
                         {/* Neto Final a Pagar / Paid */}
                         <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-800 block">Neto a Transferir</span>
-                          <span className="text-xs font-mono font-bold text-slate-900">{formatPEN(netoFinal)}</span>
+                          <span className="text-[9px] uppercase font-bold text-slate-300 block">Neto a Transferir</span>
+                          <span className="text-xs font-mono font-bold text-white">{formatPEN(netoFinal)}</span>
                           <span className="text-[8px] text-slate-400 block font-sans">
                             {existingLiq?.estado === 'PAGADO' 
                               ? '✅ Liquidado' 
@@ -582,7 +583,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
 
                       {/* Action buttons inside item */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                        <p className="text-[10px] text-slate-500 font-sans italic flex items-center gap-1">
+                        <p className="text-[10px] text-slate-400 font-sans italic flex items-center gap-1">
                           <Clock className="w-3 h-3 text-slate-400" />
                           Último día de ingreso: {formatToDDMMYYYY(asistente.fechaIngreso)}
                         </p>
@@ -590,14 +591,14 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleShowReceipt(asistente)}
-                            className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-white hover:bg-slate-100 border border-slate-205 rounded transition-all cursor-pointer shadow-sm"
+                            className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-200 bg-[#0B1120] hover:bg-[#1E2D4A] border border-[#1E2D4A] rounded transition-all cursor-pointer shadow-sm"
                           >
                             Ver Boleta de Pago
                           </button>
 
                           <button
                             onClick={() => handleLiquidate(asistente, closedCitas, sueldoBasico, pendingBonosAmount)}
-                            className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-primary hover:bg-primary/95 rounded transition-all cursor-pointer shadow-sm flex items-center gap-1"
+                            className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-amber-500 hover:bg-amber-600 rounded transition-all cursor-pointer shadow-sm flex items-center gap-1"
                           >
                             <CheckCircle2 className="w-3 h-3" />
                             {existingLiq?.estado === 'PAGADO'
@@ -614,11 +615,11 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
           </div>
 
           {/* Quick strategic tip card */}
-          <div className="p-4 bg-slate-100 border border-slate-200 rounded-md flex gap-3 text-xs text-slate-600">
-            <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+          <div className="p-4 bg-[#111A2E] border border-[#1E2D4A] rounded-md flex gap-3 text-xs text-slate-300">
+            <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-slate-800">Estructura Salarial Híbrida - Oscar Russo:</p>
-              <p className="mt-0.5">
+              <p className="font-bold text-white">Estructura Salarial Híbrida - Oscar Russo:</p>
+              <p className="mt-0.5 text-slate-400">
                 Al liquidar la planilla del mes, se procesa de forma integrada el <strong>Sueldo Mínimo Fijo ({formatPEN(config.rmvVigente)})</strong> más los bonos de las citas registradas en estado "Cerrado". Al presionar el botón "Liquidar", las citas pasarán automáticamente al estado "Liquidado", asegurando un estricto orden contable interno y previniendo pagos duplicados.
               </p>
             </div>
@@ -629,8 +630,8 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
         {/* Right Column: Receipt print preview */}
         <div className="lg:col-span-1">
           {receiptAsistente && receiptDetails ? (
-            <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden sticky top-20" id="receipt_preview_card">
-              <div className="p-4 bg-navy border-b border-navy/20 text-white flex justify-between items-center">
+            <div className="bg-[#111A2E] rounded-md border border-[#1E2D4A] shadow-sm overflow-hidden sticky top-20" id="receipt_preview_card">
+              <div className="p-4 bg-[#0B1120] border-b border-[#1E2D4A] text-white flex justify-between items-center">
                 <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                   <FileText className="w-4 h-4 text-blue-400" />
                   Boleta de Pago Virtual
@@ -644,58 +645,58 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
               </div>
 
               {/* Printable Area Wrapper */}
-              <div className="p-5 space-y-4 text-xs font-sans text-slate-700" id="print_receipt_area">
+              <div className="p-5 space-y-4 text-xs font-sans text-slate-300" id="print_receipt_area">
                 
                 {/* Receipt Header */}
-                <div className="text-center pb-3 border-b border-slate-200">
-                  <h4 className="text-sm font-bold uppercase text-slate-900 tracking-tight">OSCAR RUSSO</h4>
-                  <p className="text-[9px] text-slate-500 font-medium">Lima, Perú • RUC: 10077932823</p>
-                  <p className="text-[10px] font-bold text-primary uppercase mt-1">RECIBO DE HABERES Y BONOS - ASISTENTES</p>
+                <div className="text-center pb-3 border-b border-[#1E2D4A]">
+                  <h4 className="text-sm font-bold uppercase text-white tracking-tight">OSCAR RUSSO</h4>
+                  <p className="text-[9px] text-slate-400 font-medium">Lima, Perú • RUC: 10077932823</p>
+                  <p className="text-[10px] font-bold text-amber-400 uppercase mt-1">RECIBO DE HABERES Y BONOS - ASISTENTES</p>
                 </div>
 
                 {/* Assistant metadata */}
-                <div className="space-y-1.5 bg-slate-50 p-2.5 rounded border border-slate-150">
+                <div className="space-y-1.5 bg-[#0B1120] p-2.5 rounded border border-[#1E2D4A]">
                   <div className="flex justify-between">
-                    <span className="text-slate-500 font-semibold uppercase text-[9px]">Colaborador:</span>
-                    <span className="font-bold text-slate-800">{receiptAsistente.nombreCompleto}</span>
+                    <span className="text-slate-400 font-semibold uppercase text-[9px]">Colaborador:</span>
+                    <span className="font-bold text-white">{receiptAsistente.nombreCompleto}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500 font-semibold uppercase text-[9px]">DNI:</span>
-                    <span className="font-mono font-bold text-slate-800">{receiptAsistente.dni}</span>
+                    <span className="text-slate-400 font-semibold uppercase text-[9px]">DNI:</span>
+                    <span className="font-mono font-bold text-slate-200">{receiptAsistente.dni}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500 font-semibold uppercase text-[9px]">Cargo / Rol:</span>
-                    <span className="font-bold text-slate-800">{receiptAsistente.cargo}</span>
+                    <span className="text-slate-400 font-semibold uppercase text-[9px]">Cargo / Rol:</span>
+                    <span className="font-bold text-slate-200">{receiptAsistente.cargo}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500 font-semibold uppercase text-[9px]">Periodo:</span>
-                    <span className="font-mono font-bold text-slate-800 uppercase">{receiptDetails.mes}</span>
+                    <span className="text-slate-400 font-semibold uppercase text-[9px]">Periodo:</span>
+                    <span className="font-mono font-bold text-slate-200 uppercase">{receiptDetails.mes}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500 font-semibold uppercase text-[9px]">Vía de Pago:</span>
-                    <span className="font-bold text-slate-800">{receiptAsistente.banco} N° {receiptAsistente.numeroCuenta}</span>
+                    <span className="text-slate-400 font-semibold uppercase text-[9px]">Vía de Pago:</span>
+                    <span className="font-bold text-slate-200">{receiptAsistente.banco} N° {receiptAsistente.numeroCuenta}</span>
                   </div>
                 </div>
 
                 {/* Details list of pay items */}
                 <div className="space-y-2">
-                  <h5 className="font-bold text-[10px] uppercase text-slate-500 tracking-wider">Conceptos de Liquidación</h5>
+                  <h5 className="font-bold text-[10px] uppercase text-slate-400 tracking-wider">Conceptos de Liquidación</h5>
                   
-                  <div className="divide-y divide-slate-100 border-t border-b border-slate-200">
+                  <div className="divide-y divide-[#1E2D4A] border-t border-b border-[#1E2D4A]">
                     {/* Fixed salary item */}
                     <div className="py-2 flex justify-between">
                       <div>
-                        <span className="font-bold text-slate-800 block">Sueldo Fijo Mensual</span>
+                        <span className="font-bold text-slate-100 block">Sueldo Fijo Mensual</span>
                         <span className="text-[9px] text-slate-400">Remuneración Mínima Vital de Ley</span>
                       </div>
-                      <span className="font-mono font-bold text-slate-800 self-center">{formatPEN(receiptDetails.sueldoBasico)}</span>
+                      <span className="font-mono font-bold text-white self-center">{formatPEN(receiptDetails.sueldoBasico)}</span>
                     </div>
 
                     {/* Bonos detailed list inside the month */}
                     <div className="py-2 space-y-1">
                       <div className="flex justify-between">
-                        <span className="font-bold text-slate-800">Bonificaciones por Cierre</span>
-                        <span className="font-mono font-bold text-emerald-600">+{formatPEN(receiptDetails.totalBonos)}</span>
+                        <span className="font-bold text-slate-100">Bonificaciones por Cierre</span>
+                        <span className="font-mono font-bold text-emerald-400">+{formatPEN(receiptDetails.totalBonos)}</span>
                       </div>
                       
                       {receiptDetails.bonosList.length === 0 ? (
@@ -703,9 +704,9 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                       ) : (
                         <div className="pl-2 space-y-1 max-h-32 overflow-y-auto pr-1">
                           {receiptDetails.bonosList.map((c) => (
-                            <div key={c.id} className="flex justify-between text-[9px] text-slate-500 font-mono">
-                              <span className="truncate max-w-[150px]">{c.clienteNombre} ({c.tipoOperacion})</span>
-                              <span className="font-bold text-slate-700">S/. {c.montoBono.toFixed(2)}</span>
+                            <div key={c.id} className="flex justify-between text-[9px] text-slate-400 font-mono">
+                              <span className="truncate max-w-[150px] text-slate-300">{c.clienteNombre} ({c.tipoOperacion})</span>
+                              <span className="font-bold text-slate-200">S/. {c.montoBono.toFixed(2)}</span>
                             </div>
                           ))}
                         </div>
@@ -714,37 +715,37 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
 
                     {/* Adelanto de quincena item */}
                     {receiptDetails.montoAdelantoQuincena !== undefined && receiptDetails.montoAdelantoQuincena > 0 && (
-                      <div className="py-2 flex justify-between border-t border-slate-100">
+                      <div className="py-2 flex justify-between border-t border-[#1E2D4A]">
                         <div>
-                          <span className="font-bold text-slate-800 block text-amber-700">Adelanto en Quincena</span>
+                          <span className="font-bold text-slate-100 block text-amber-400">Adelanto en Quincena</span>
                           <span className="text-[9px] text-slate-400">
                             {receiptDetails.reciboAdelantoEntregado 
                               ? '✓ Recibo por Honorarios entregado' 
                               : '⚠️ Pendiente de entregar Recibo'}
                           </span>
                         </div>
-                        <span className="font-mono font-bold text-amber-600 self-center">-{formatPEN(receiptDetails.montoAdelantoQuincena)}</span>
+                        <span className="font-mono font-bold text-amber-400 self-center">-{formatPEN(receiptDetails.montoAdelantoQuincena)}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Grand Payout Total */}
-                <div className="p-3 bg-navy rounded text-white flex justify-between items-center">
+                <div className="p-3 bg-[#0B1120] border border-[#1E2D4A] rounded text-white flex justify-between items-center">
                   <div>
                     <span className="text-[10px] uppercase text-slate-300 block font-bold tracking-wider">Monto Neto a Pagar</span>
                     <span className="text-[8px] text-slate-400">Total Soles (PEN)</span>
                   </div>
-                  <span className="text-base font-bold font-mono">{formatPEN(receiptDetails.totalPagar)}</span>
+                  <span className="text-base font-bold font-mono text-amber-400">{formatPEN(receiptDetails.totalPagar)}</span>
                 </div>
 
                 {/* Signatures */}
                 <div className="pt-8 grid grid-cols-2 gap-4 text-center text-[8px] font-sans">
-                  <div className="border-t border-slate-300 pt-1.5 text-slate-500 font-medium">
+                  <div className="border-t border-[#1E2D4A] pt-1.5 text-slate-400 font-medium">
                     Firma Coordinador<br />
                     Oscar Russo
                   </div>
-                  <div className="border-t border-slate-300 pt-1.5 text-slate-500 font-medium">
+                  <div className="border-t border-[#1E2D4A] pt-1.5 text-slate-400 font-medium">
                     Firma Colaborador<br />
                     DNI: {receiptAsistente.dni}
                   </div>
@@ -753,10 +754,10 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
               </div>
 
               {/* Action utilities bar */}
-              <div className="p-4 bg-slate-50 border-t border-slate-200 flex gap-2">
+              <div className="p-4 bg-[#0B1120] border-t border-[#1E2D4A] flex gap-2">
                 <button
                   onClick={handleDownloadPdf}
-                  className="flex-1 flex items-center justify-center gap-1 py-2 px-2 bg-primary hover:bg-primary/95 text-white rounded text-[11px] font-bold uppercase tracking-wider cursor-pointer shadow-sm transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1 py-2 px-2 bg-amber-500 hover:bg-amber-600 text-white rounded text-[11px] font-bold uppercase tracking-wider cursor-pointer shadow-sm transition-colors"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   Descargar PDF
@@ -764,10 +765,10 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 p-6 rounded-md border border-slate-200 text-center space-y-3 sticky top-20" id="receipt_placeholder">
-              <FileText className="w-10 h-10 text-slate-300 mx-auto" />
-              <h4 className="text-xs font-bold text-slate-700 uppercase">Previsualización de Boleta</h4>
-              <p className="text-xs text-slate-500">
+            <div className="bg-[#111A2E] p-6 rounded-md border border-[#1E2D4A] text-center space-y-3 sticky top-20" id="receipt_placeholder">
+              <FileText className="w-10 h-10 text-slate-500 mx-auto" />
+              <h4 className="text-xs font-bold text-slate-200 uppercase">Previsualización de Boleta</h4>
+              <p className="text-xs text-slate-400">
                 Selecciona "Ver Boleta de Pago" al costado de cualquier colaborador para generar su liquidación contable, previsualizar su recibo formal y descargar las instrucciones de transferencia bancaria.
               </p>
             </div>
@@ -777,32 +778,32 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
       </div>
 
       {/* Control de Recibos por Honorarios (RHe) y Liquidaciones Procesadas */}
-      <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden" id="past_liquidations_card">
-        <div className="p-4 bg-navy border-b border-navy/20 text-white flex justify-between items-center">
+      <div className="bg-[#111A2E] rounded-md border border-[#1E2D4A] shadow-sm overflow-hidden" id="past_liquidations_card">
+        <div className="p-4 bg-[#0B1120] border-b border-[#1E2D4A] text-white flex justify-between items-center">
           <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
             <CheckCircle2 className="w-4 h-4 text-blue-400" />
             Control de Recibos por Honorarios (RHe) y Liquidaciones Procesadas
           </span>
-          <span className="text-[10px] bg-navy/60 px-2 py-0.5 rounded border border-slate-600 font-mono">
+          <span className="text-[10px] bg-[#1E2D4A] text-slate-300 px-2 py-0.5 rounded border border-slate-700 font-mono">
             Total Registros: {liquidaciones.length}
           </span>
         </div>
 
         <div className="p-5 space-y-4">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             A continuación se listan las planillas de haberes que han sido cerradas y pagadas en el sistema. Puedes marcar y controlar de manera estricta cuándo el colaborador ha entregado formalmente su <strong>Recibo por Honorarios (RHe)</strong> para efectos de control tributario.
           </p>
 
           {liquidaciones.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 border border-dashed border-slate-200 rounded-md">
-              <FileText className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+            <div className="text-center py-8 text-slate-400 border border-dashed border-[#1E2D4A] rounded-md">
+              <FileText className="w-8 h-8 mx-auto text-slate-500 mb-2" />
               <p className="text-xs">No se registran planillas de liquidación cerradas en el sistema.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <tr className="bg-[#0B1120] border-b border-[#1E2D4A] text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                     <th className="p-3">Periodo</th>
                     <th className="p-3">Colaborador</th>
                     <th className="p-3">Sueldo Fijo (RMV)</th>
@@ -816,16 +817,16 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                     <th className="p-3 text-center">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="divide-y divide-[#1E2D4A] text-slate-300">
                   {liquidaciones.map((liq) => {
                     const isEditing = editingLiqId === liq.id;
                     const isConfirmingDelete = confirmDeleteId === liq.id;
 
                     if (isEditing) {
                       return (
-                        <tr key={liq.id} className="bg-blue-50/40">
-                          <td className="p-3 font-mono font-bold text-slate-900">{liq.mes}</td>
-                          <td className="p-3 font-semibold text-slate-800">{liq.asistenteNombre}</td>
+                        <tr key={liq.id} className="bg-[#1E2D4A]/50">
+                          <td className="p-3 font-mono font-bold text-white">{liq.mes}</td>
+                          <td className="p-3 font-semibold text-slate-200">{liq.asistenteNombre}</td>
                           <td className="p-3">
                             <div className="flex items-center gap-1">
                               <span className="text-slate-400 font-bold">S/.</span>
@@ -833,7 +834,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                                 type="number"
                                 value={editSueldo}
                                 onChange={(e) => setEditSueldo(Number(e.target.value))}
-                                className="w-20 px-1.5 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-primary font-mono text-slate-900"
+                                className="w-20 px-1.5 py-1 text-xs border border-[#1E2D4A] bg-[#0B1120] rounded focus:outline-none focus:border-amber-500 font-mono text-slate-100"
                                 placeholder="Sueldo"
                               />
                             </div>
@@ -845,7 +846,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                                 type="number"
                                 value={editBonos}
                                 onChange={(e) => setEditBonos(Number(e.target.value))}
-                                className="w-20 px-1.5 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-primary font-mono text-slate-900"
+                                className="w-20 px-1.5 py-1 text-xs border border-[#1E2D4A] bg-[#0B1120] rounded focus:outline-none focus:border-amber-500 font-mono text-slate-100"
                                 placeholder="Bonos"
                               />
                             </div>
@@ -857,45 +858,45 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                                 type="number"
                                 value={editAdelanto}
                                 onChange={(e) => setEditAdelanto(Number(e.target.value))}
-                                className="w-20 px-1.5 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-primary font-mono text-slate-900"
+                                className="w-20 px-1.5 py-1 text-xs border border-[#1E2D4A] bg-[#0B1120] rounded focus:outline-none focus:border-amber-500 font-mono text-slate-100"
                                 placeholder="Adelanto"
                               />
                             </div>
                           </td>
-                          <td className="p-3 font-mono font-bold text-slate-900">
+                          <td className="p-3 font-mono font-bold text-white">
                             {formatPEN(editSueldo + editBonos - editAdelanto)}
                           </td>
                           <td className="p-3 space-y-1.5">
                             <input
                               type="text"
                               value={editBanco}
-                              onChange={(e) => setEditBanco(e.target.value)}
-                              className="w-full px-1.5 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-primary font-semibold text-slate-800"
+                              onChange={(e) => setEditBanco(capitalizeWords(e.target.value))}
+                              className="w-full px-1.5 py-1 text-xs border border-[#1E2D4A] bg-[#0B1120] rounded focus:outline-none focus:border-amber-500 font-semibold text-slate-200 capitalize"
                               placeholder="Banco"
                             />
                             <input
                               type="text"
                               value={editCuenta}
-                              onChange={(e) => setEditCuenta(e.target.value)}
-                              className="w-full px-1.5 py-0.5 text-[10px] border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-primary font-mono text-slate-500"
+                              onChange={(e) => setEditCuenta(capitalizeWords(e.target.value))}
+                              className="w-full px-1.5 py-0.5 text-[10px] border border-[#1E2D4A] bg-[#0B1120] rounded focus:outline-none focus:border-amber-500 font-mono text-slate-300 capitalize"
                               placeholder="Cuenta"
                             />
                             <input
                               type="text"
                               value={editCci}
                               onChange={(e) => setEditCci(e.target.value)}
-                              className="w-full px-1.5 py-0.5 text-[10px] border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-primary font-mono text-slate-500"
+                              className="w-full px-1.5 py-0.5 text-[10px] border border-[#1E2D4A] bg-[#0B1120] rounded focus:outline-none focus:border-amber-500 font-mono text-slate-300"
                               placeholder="CCI (opcional)"
                             />
                           </td>
-                          <td className="p-3 text-center text-slate-400">-</td>
-                          <td className="p-3 text-center text-slate-400">-</td>
-                          <td className="p-3 text-center text-slate-400">-</td>
+                          <td className="p-3 text-center text-slate-500">-</td>
+                          <td className="p-3 text-center text-slate-500">-</td>
+                          <td className="p-3 text-center text-slate-500">-</td>
                           <td className="p-3 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               <button
                                 onClick={() => saveEditing(liq)}
-                                className="p-1 px-1.5 rounded bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] uppercase flex items-center gap-0.5 cursor-pointer shadow-sm"
+                                className="p-1 px-1.5 rounded bg-green-600 hover:bg-green-500 text-white font-bold text-[10px] uppercase flex items-center gap-0.5 cursor-pointer shadow-sm"
                                 title="Guardar cambios"
                               >
                                 <Save className="w-3 h-3" />
@@ -903,7 +904,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                               </button>
                               <button
                                 onClick={cancelEditing}
-                                className="p-1 px-1.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[10px] uppercase flex items-center gap-0.5 cursor-pointer"
+                                className="p-1 px-1.5 rounded bg-[#1E2D4A] hover:bg-slate-700 text-slate-300 font-bold text-[10px] uppercase flex items-center gap-0.5 cursor-pointer"
                                 title="Cancelar"
                               >
                                 <Undo2 className="w-3 h-3" />
@@ -916,27 +917,27 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                     }
 
                     return (
-                      <tr key={liq.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 font-mono font-bold text-slate-900">{liq.mes}</td>
-                        <td className="p-3 font-semibold text-slate-800">{liq.asistenteNombre}</td>
+                      <tr key={liq.id} className="hover:bg-[#1E2D4A]/30 transition-colors">
+                        <td className="p-3 font-mono font-bold text-white">{liq.mes}</td>
+                        <td className="p-3 font-semibold text-slate-200">{liq.asistenteNombre}</td>
                         <td className="p-3 font-mono">{formatPEN(liq.sueldoBasico)}</td>
-                        <td className="p-3 font-mono text-green-600 font-medium">+{formatPEN(liq.totalBonos)}</td>
-                        <td className="p-3 font-mono text-amber-600">
+                        <td className="p-3 font-mono text-emerald-400 font-medium">+{formatPEN(liq.totalBonos)}</td>
+                        <td className="p-3 font-mono text-amber-400">
                           {liq.montoAdelantoQuincena && liq.montoAdelantoQuincena > 0 ? `-${formatPEN(liq.montoAdelantoQuincena)}` : 'S/. 0.00'}
                         </td>
-                        <td className="p-3 font-mono font-bold text-slate-900">{formatPEN(liq.montoTotal)}</td>
+                        <td className="p-3 font-mono font-bold text-white">{formatPEN(liq.montoTotal)}</td>
                         <td className="p-3">
-                          <span className="font-semibold block">{liq.banco}</span>
-                          <span className="text-[10px] text-slate-500 font-mono block">Cuenta: {liq.numeroCuenta}</span>
+                          <span className="font-semibold block text-slate-200">{liq.banco}</span>
+                          <span className="text-[10px] text-slate-400 font-mono block">Cuenta: {liq.numeroCuenta}</span>
                           {liq.cci && <span className="text-[9px] text-slate-400 font-mono block">CCI: {liq.cci}</span>}
                         </td>
                         <td className="p-3 text-center">
                           <button
                             onClick={() => handleDownloadPastPdf(liq)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[#1E2D4A] bg-[#0B1120] hover:bg-[#1E2D4A] text-slate-200 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors"
                             title="Descargar PDF de Boleta"
                           >
-                            <FileText className="w-3.5 h-3.5 text-primary" />
+                            <FileText className="w-3.5 h-3.5 text-amber-400" />
                             PDF
                           </button>
                         </td>
@@ -953,18 +954,18 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                             }}
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                               liq.reciboAdelantoEntregado
-                                ? 'bg-green-50 border-green-200 text-green-700 font-bold'
-                                : 'bg-slate-100 border-slate-200 text-slate-500 hover:bg-slate-200'
+                                ? 'bg-green-950/60 border-green-700/60 text-green-300 font-bold'
+                                : 'bg-[#0B1120] border-[#1E2D4A] text-slate-400 hover:bg-[#1E2D4A]'
                             }`}
                           >
                             {liq.reciboAdelantoEntregado ? (
                               <>
-                                <CheckCircle2 className="w-3 h-3 text-green-600" />
+                                <CheckCircle2 className="w-3 h-3 text-green-400" />
                                 Recibido ✓
                               </>
                             ) : (
                               <>
-                                <XCircle className="w-3 h-3 text-slate-400" />
+                                <XCircle className="w-3 h-3 text-slate-500" />
                                 Pendiente
                               </>
                             )}
@@ -983,18 +984,18 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                             }}
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                               liq.reciboHonorariosEntregado
-                                ? 'bg-green-50 border-green-200 text-green-700 font-bold'
-                                : 'bg-slate-100 border-slate-200 text-slate-500 hover:bg-slate-200'
+                                ? 'bg-green-950/60 border-green-700/60 text-green-300 font-bold'
+                                : 'bg-[#0B1120] border-[#1E2D4A] text-slate-400 hover:bg-[#1E2D4A]'
                             }`}
                           >
                             {liq.reciboHonorariosEntregado ? (
                               <>
-                                <CheckCircle2 className="w-3 h-3 text-green-600" />
+                                <CheckCircle2 className="w-3 h-3 text-green-400" />
                                 Recibido ✓
                               </>
                             ) : (
                               <>
-                                <XCircle className="w-3 h-3 text-slate-400" />
+                                <XCircle className="w-3 h-3 text-slate-500" />
                                 Pendiente
                               </>
                             )}
@@ -1002,18 +1003,18 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                         </td>
                         <td className="p-3 text-center">
                           {isConfirmingDelete ? (
-                            <div className="flex flex-col items-center justify-center gap-1 bg-red-50 p-1.5 rounded border border-red-200">
-                              <span className="text-[9px] font-bold text-red-600 animate-pulse uppercase mb-1">¿Seguro de eliminar?</span>
+                            <div className="flex flex-col items-center justify-center gap-1 bg-red-950/60 p-1.5 rounded border border-red-800/60">
+                              <span className="text-[9px] font-bold text-red-300 animate-pulse uppercase mb-1">¿Seguro de eliminar?</span>
                               <div className="flex gap-1.5">
                                 <button
                                   onClick={() => confirmDelete(liq.id)}
-                                  className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-[9px] font-bold uppercase cursor-pointer"
+                                  className="px-2 py-0.5 bg-red-600 hover:bg-red-500 text-white rounded text-[9px] font-bold uppercase cursor-pointer"
                                 >
                                   Sí
                                 </button>
                                 <button
                                   onClick={cancelDelete}
-                                  className="px-2 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-[9px] font-bold uppercase cursor-pointer"
+                                  className="px-2 py-0.5 bg-[#1E2D4A] hover:bg-slate-700 text-slate-200 rounded text-[9px] font-bold uppercase cursor-pointer"
                                 >
                                   No
                                 </button>
@@ -1023,14 +1024,14 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                             <div className="flex items-center justify-center gap-1.5">
                               <button
                                 onClick={() => startEditing(liq)}
-                                className="p-1.5 rounded bg-slate-50 hover:bg-blue-50 border border-slate-200 text-slate-600 hover:text-blue-600 cursor-pointer transition-colors"
+                                className="p-1.5 rounded bg-[#0B1120] hover:bg-[#1E2D4A] border border-[#1E2D4A] text-slate-300 hover:text-amber-400 cursor-pointer transition-colors"
                                 title="Editar registro"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => handleDeleteClick(liq.id)}
-                                className="p-1.5 rounded bg-slate-50 hover:bg-red-50 border border-slate-200 text-slate-600 hover:text-red-600 cursor-pointer transition-colors"
+                                className="p-1.5 rounded bg-[#0B1120] hover:bg-red-950/50 border border-[#1E2D4A] text-slate-300 hover:text-red-400 cursor-pointer transition-colors"
                                 title="Eliminar registro"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1050,9 +1051,9 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
 
       {/* Custom Confirmation Modal */}
       {confirmLiquidation && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-md border border-slate-200 shadow-xl max-w-md w-full overflow-hidden">
-            <div className="p-4 bg-navy text-white flex justify-between items-center">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-[#111A2E] rounded-md border border-[#1E2D4A] shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="p-4 bg-[#0B1120] text-white flex justify-between items-center border-b border-[#1E2D4A]">
               <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                 <Coins className="w-4 h-4 text-blue-400" />
                 Confirmar Registro de Pago
@@ -1066,41 +1067,41 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
             </div>
             
             <div className="p-5 space-y-4">
-              <p className="text-xs text-slate-600 leading-relaxed">
-                ¿Confirmas que deseas registrar el pago de haberes y liquidar los bonos para <strong>{confirmLiquidation.asistente.nombreCompleto}</strong> correspondiente al periodo <strong>{selectedMonth}</strong>?
+              <p className="text-xs text-slate-300 leading-relaxed">
+                ¿Confirmas que deseas registrar el pago de haberes y liquidar los bonos para <strong className="text-white">{confirmLiquidation.asistente.nombreCompleto}</strong> correspondiente al periodo <strong className="text-white">{selectedMonth}</strong>?
               </p>
 
-              <div className="bg-slate-50 p-3.5 rounded border border-slate-150 space-y-2 text-xs font-mono">
+              <div className="bg-[#0B1120] p-3.5 rounded border border-[#1E2D4A] space-y-2 text-xs font-mono">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Sueldo Fijo (RMV):</span>
-                  <span className="font-bold text-slate-800">{formatPEN(confirmLiquidation.sueldo)}</span>
+                  <span className="text-slate-400">Sueldo Fijo (RMV):</span>
+                  <span className="font-bold text-slate-100">{formatPEN(confirmLiquidation.sueldo)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Bonos por Citas:</span>
-                  <span className="font-bold text-green-600">+{formatPEN(confirmLiquidation.bonos)}</span>
+                  <span className="text-slate-400">Bonos por Citas:</span>
+                  <span className="font-bold text-emerald-400">+{formatPEN(confirmLiquidation.bonos)}</span>
                 </div>
-                <div className="flex justify-between border-t border-slate-200/60 pt-2 text-amber-700">
+                <div className="flex justify-between border-t border-[#1E2D4A] pt-2 text-amber-400">
                   <span>Adelanto Quincena (S/.):</span>
                   <span className="font-bold">-{formatPEN(liqMontoAdelanto)}</span>
                 </div>
-                <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-slate-900 text-sm">
+                <div className="border-t border-[#1E2D4A] pt-2 flex justify-between font-bold text-white text-sm">
                   <span>Monto Neto Fin de Mes:</span>
-                  <span>{formatPEN(confirmLiquidation.sueldo + confirmLiquidation.bonos - liqMontoAdelanto)}</span>
+                  <span className="text-amber-400">{formatPEN(confirmLiquidation.sueldo + confirmLiquidation.bonos - liqMontoAdelanto)}</span>
                 </div>
               </div>
 
               {/* Form inputs for Adelanto */}
-              <div className="space-y-3 bg-amber-50/50 p-3.5 rounded border border-amber-100 text-xs">
-                <span className="font-bold uppercase tracking-wider text-amber-800 block text-[10px]">Detalle de Adelanto de Quincena</span>
+              <div className="space-y-3 bg-amber-950/30 p-3.5 rounded border border-amber-800/40 text-xs">
+                <span className="font-bold uppercase tracking-wider text-amber-300 block text-[10px]">Detalle de Adelanto de Quincena</span>
                 
                 <div className="grid grid-cols-1 gap-2.5">
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">Monto de Adelanto (S/.)</label>
+                    <label className="block text-slate-300 font-semibold mb-1">Monto de Adelanto (S/.)</label>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
-                      className="w-full px-2.5 py-1.5 border border-slate-250 bg-white rounded text-xs focus:ring-1 focus:ring-primary focus:outline-none font-mono"
+                      className="w-full px-2.5 py-1.5 border border-[#1E2D4A] bg-[#0B1120] rounded text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none font-mono text-slate-100"
                       placeholder="Ingrese monto si aplica adelanto (ej. 500)"
                       value={liqMontoAdelanto || ''}
                       onChange={(e) => {
@@ -1118,7 +1119,7 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                     <input
                       type="checkbox"
                       id="liqReciboAdelantoCheckbox"
-                      className="rounded text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer"
+                      className="rounded text-amber-500 focus:ring-amber-500 h-3.5 w-3.5 cursor-pointer bg-[#0B1120] border-[#1E2D4A]"
                       checked={liqReciboAdelanto}
                       onChange={(e) => {
                         const checked = e.target.checked;
@@ -1129,28 +1130,28 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
                         }));
                       }}
                     />
-                    <label htmlFor="liqReciboAdelantoCheckbox" className="text-slate-700 font-medium cursor-pointer select-none">
+                    <label htmlFor="liqReciboAdelantoCheckbox" className="text-slate-300 font-medium cursor-pointer select-none">
                       ¿Se recibió el Recibo por Honorarios (RHe) por este adelanto?
                     </label>
                   </div>
                 </div>
               </div>
 
-              <p className="text-[10px] text-slate-500 italic">
+              <p className="text-[10px] text-slate-400 italic">
                 * Al confirmar, las {confirmLiquidation.citas.length} citas en estado "Cerrado" pasarán automáticamente a "Liquidado" para este mes.
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-150 flex justify-end gap-2.5">
+            <div className="p-4 bg-[#0B1120] border-t border-[#1E2D4A] flex justify-end gap-2.5">
               <button
                 onClick={() => setConfirmLiquidation(null)}
-                className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-300 bg-[#1E2D4A] hover:bg-slate-700 border border-slate-700 rounded transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={executeLiquidation}
-                className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white bg-primary hover:bg-primary/95 rounded shadow-sm transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white bg-amber-500 hover:bg-amber-600 rounded shadow-sm transition-colors cursor-pointer font-bold"
               >
                 Registrar Pago
               </button>
@@ -1161,16 +1162,16 @@ MONTO NETO A TRANSFERIR:   S/. ${receiptDetails.totalPagar.toFixed(2)}
 
       {/* Floating Notification Toast */}
       {notification && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 p-4 rounded-md shadow-lg border animate-fade-in bg-white border-slate-200 max-w-sm">
-          <div className={`p-1 rounded-full shrink-0 ${notification.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 p-4 rounded-md shadow-2xl border animate-fade-in bg-[#111A2E] border-[#1E2D4A] max-w-sm text-slate-100">
+          <div className={`p-1 rounded-full shrink-0 ${notification.type === 'success' ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>
             {notification.type === 'success' ? (
               <CheckCircle2 className="w-5 h-5" />
             ) : (
               <AlertCircle className="w-5 h-5" />
             )}
           </div>
-          <div className="text-xs font-medium text-slate-800 flex-1 leading-normal">{notification.message}</div>
-          <button onClick={() => setNotification(null)} className="text-slate-400 hover:text-slate-600 shrink-0 font-bold ml-1 text-xs">✕</button>
+          <div className="text-xs font-medium text-slate-200 flex-1 leading-normal">{notification.message}</div>
+          <button onClick={() => setNotification(null)} className="text-slate-400 hover:text-white shrink-0 font-bold ml-1 text-xs">✕</button>
         </div>
       )}
 
